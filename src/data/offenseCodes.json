@@ -1,0 +1,12 @@
+[
+  { "code": "302", "act": "IPC", "label": "Murder", "category": "Homicide", "cognizable": true },
+  { "code": "323", "act": "IPC", "label": "Voluntarily causing hurt", "category": "Assault", "cognizable": false },
+  { "code": "354", "act": "IPC", "label": "Assault on woman to outrage her modesty", "category": "Women & Child", "cognizable": true },
+  { "code": "376", "act": "IPC", "label": "Rape", "category": "Women & Child", "cognizable": true },
+  { "code": "379", "act": "IPC", "label": "Theft", "category": "Property", "cognizable": true },
+  { "code": "380", "act": "IPC", "label": "Theft in dwelling house", "category": "Property", "cognizable": true },
+  { "code": "420", "act": "IPC", "label": "Cheating and dishonestly inducing delivery of property", "category": "Cyber / Finance", "cognizable": true },
+  { "code": "457", "act": "IPC", "label": "House-trespass to commit offence", "category": "Property", "cognizable": true },
+  { "code": "66D", "act": "IT Act", "label": "Cheating by personation using computer resource", "category": "Cyber / Finance", "cognizable": true },
+  { "code": "143", "act": "Motor Vehicle Act", "label": "Driving without licence", "category": "Traffic", "cognizable": false }
+]

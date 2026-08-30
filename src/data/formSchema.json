@@ -1,0 +1,79 @@
+{
+  "title": "FIR / First Information Report",
+  "subtitle": "Section 154 CrPC — Crime Information Report Form (CCTNS F13)",
+  "sections": [
+    {
+      "id": "complainant",
+      "label": "Complainant Details",
+      "fields": [
+        { "name": "complainant.name", "label": "Name", "type": "text", "required": true },
+        { "name": "complainant.fatherName", "label": "Father / Husband Name", "type": "text" },
+        { "name": "complainant.address", "label": "Full Postal Address", "type": "textarea" },
+        { "name": "complainant.phone", "label": "Contact Phone", "type": "tel", "required": true, "rule": "phone" },
+        { "name": "complainant.email", "label": "Email", "type": "email", "rule": "email" }
+      ]
+    },
+    {
+      "id": "occurrence",
+      "label": "Occurrence Details",
+      "fields": [
+        { "name": "offense.date", "label": "Date of Occurrence", "type": "date", "rule": "date" },
+        { "name": "offense.time", "label": "Time of Occurrence", "type": "time", "rule": "time" },
+        { "name": "offense.place", "label": "Place of Occurrence", "type": "textarea" },
+        { "name": "offense.beat", "label": "Nearest PS / Beat", "type": "text" },
+        {
+          "name": "offense.sections",
+          "label": "Nature of Offence (IPC Sections)",
+          "type": "multiselect",
+          "required": true,
+          "options": [
+            { "value": "302", "label": "302 — Murder" },
+            { "value": "323", "label": "323 — Voluntarily causing hurt" },
+            { "value": "354", "label": "354 — Assault on woman to outrage modesty" },
+            { "value": "376", "label": "376 — Rape" },
+            { "value": "379", "label": "379 — Theft" },
+            { "value": "380", "label": "380 — Theft in dwelling house" },
+            { "value": "420", "label": "420 — Cheating and dishonesty" },
+            { "value": "457", "label": "457 — House-trespass to commit offence" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "accused",
+      "label": "Accused / Suspect",
+      "description": "If the accused is not known by name, provide a physical description.",
+      "fields": [
+        { "name": "accused.name", "label": "Name (leave empty if unknown)", "type": "text" },
+        { "name": "accused.age", "label": "Approx. Age", "type": "number" },
+        { "name": "accused.sex", "label": "Sex", "type": "select", "options": ["Male", "Female", "Other"] },
+        { "name": "accused.description", "label": "Physical Description (when name unknown)", "type": "textarea", "requiredWhen": { "field": "accused.name", "isEmpty": true } }
+      ]
+    },
+    {
+      "id": "cyber",
+      "label": "Cyber Crime Details",
+      "description": "Shown only when the case is a cybercrime.",
+      "dependsOn": { "field": "offense.sections", "includeAny": ["420", "457"] },
+      "fields": [
+        { "name": "property", "label": "Digital Evidence / Assets Involved", "type": "repeat" }
+      ]
+    },
+    {
+      "id": "property",
+      "label": "Property Involved (stolen / recovered)",
+      "dependsOn": { "field": "offense.sections", "includeAny": ["379", "380", "457"] },
+      "fields": [
+        { "name": "property", "label": "Property List", "type": "repeat", "required": true }
+      ]
+    },
+    {
+      "id": "narrative",
+      "label": "History of the Case",
+      "description": "Describe the sequence of events in your own words.",
+      "fields": [
+        { "name": "narrative", "label": "Narrative", "type": "richtext", "required": true }
+      ]
+    }
+  ]
+}
