@@ -9,14 +9,15 @@ import App from './App'
 
 beforeEach(() => {
   delete (document as unknown as { modelContext?: unknown }).modelContext
+  localStorage.removeItem('police-portal:incidents')
 })
 
 describe('App shell', () => {
-  it('renders the portal header and default FIR tab', () => {
+  it('renders the portal header and the FIR form by default', () => {
     render(<App />)
     expect(screen.getByText('Digital Police Portal')).toBeInTheDocument()
-    expect(screen.getByText(/First Information Report/)).toBeInTheDocument()
-    expect(screen.getByText(/FIR module/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/First Information Report/).length).toBeGreaterThan(0)
+    expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
   })
 
   it('shows the WebMCP tools pending hint when modelContext is unavailable', () => {
@@ -29,11 +30,12 @@ describe('App shell', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'e-Challan' }))
     expect(screen.getByText(/Challan module — scaffolded/i)).toBeInTheDocument()
+    expect(screen.queryByText(/Complainant Details/)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'ERSS-112' }))
     expect(screen.getByText(/ERSS-112 dispatch console — stretch goal/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'FIR' }))
-    expect(screen.getByText(/FIR module/i)).toBeInTheDocument()
+    expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
   })
 })

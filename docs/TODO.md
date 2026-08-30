@@ -31,10 +31,13 @@
 
 ### Phase 3: FIR Form UI
 - [x] `components/Dashboard` logic in `App.tsx` (tab switch re-registers tools)
-- [ ] Build `components/FIRForm.tsx` — dynamic form rendering using `formSchema.json`
-  - Handle `dependsOn` / `visibleWhen` / `requiredWhen`
-  - Show validation errors inline
-- [ ] Wire form state changes to `incidentStore.js`
+- [x] Build `components/FIRForm.tsx` — dynamic form rendering using `formSchema.json`:
+  - [x] Handles section `dependsOn` / `includeAny` (property section reveals on theft codes)
+  - [x] Field types: text, textarea, tel, email, date, time, number, select, multiselect, richtext
+  - [x] Renders inline validation errors + missing-field summary
+  - [x] `requiredWhen` (accused.description requires physical details when name empty)
+- [x] Wire form state changes to `incidentStore` (nested dotted-path updates on change)
+- [x] Component tests: `src/components/FIRForm.test.tsx` (conditional reveals, requiredWhen, summary clearing)
 
 ### Phase 4: WebMCP Tools
 - [x] Write `lib/webmcpTools.ts` — register `fir/*` tools:
@@ -49,6 +52,12 @@
 - [x] Verify `npm run build` typechecks cleanly
 
 ### Phase 5: Testing
+- [x] Add Vitest suite (Vitest 4 + jsdom + testing-library):
+  - [x] Unit: `src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`
+  - [x] Integration: `src/test/webmcp.integration.test.ts` (mocks `document.modelContext`, drives `fir/*` against store)
+  - [x] System: `src/App.test.tsx` (renders shell + tab switching)
+  - [x] `npm test` / `npm run test:watch` / `npm run test:coverage` scripts
+- [x] `npm run lint` + `npm run build` (typechecks test files) pass
 - [ ] Enable `chrome://flags/#enable-webmcp-testing`
 - [ ] Open app → run `getTools()` in console → confirm `fir/*` tools listed
 - [ ] Call `executeTool("fir/fill_field", ...)` manually → confirm UI updates

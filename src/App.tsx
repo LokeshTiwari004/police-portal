@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { registerTools } from './lib/webmcpTools'
+import FIRForm from './components/FIRForm'
 
 type Tab = 'fir' | 'challan' | 'dispatch'
 
@@ -66,20 +67,7 @@ export default function App() {
           </h2>
           <p className="text-slate-500 text-sm mb-6">{TABS.find((t) => t.id === tab)?.blurb}</p>
 
-          {tab === 'fir' && (
-            <div className="text-slate-600">
-              <p className="mb-3">
-                This is the <strong>FIR module</strong>. In the next build step we wire the live
-                dynamic form driven by <code className="bg-slate-100 px-1 rounded">formSchema.json</code>.
-              </p>
-              <p className="text-sm text-slate-500">
-                Try in console:
-                <code className="block bg-slate-100 px-2 py-1 rounded mt-1">
-                  const t = await document.modelContext.getTools(); t.map(x =&gt; x.name).filter(n =&gt; n.startsWith('fir/'))
-                </code>
-              </p>
-            </div>
-          )}
+          {tab === 'fir' && <FIRForm />}
           {tab === 'challan' && (
             <p className="text-slate-600">e-Challan module — scaffolded in the Should-Have phase.</p>
           )}
