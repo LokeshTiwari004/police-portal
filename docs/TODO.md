@@ -167,13 +167,13 @@ extension path already demonstrates this — so treat as stretch:
 Improve how an agent perceives the tools — scope is modest and self-contained
 in `src/lib/webmcpTools.ts`:
 
-- [ ] Consider adding a `title` to each tool (Chrome shows it as the browser
+- [x] Consider adding a `title` to each tool (Chrome shows it as the browser
       UI label; the docs list `title` as a `ModelContextTool` field).
-- [ ] Review each `description` for agent-actionability (see this session's
+- [x] Review each `description` for agent-actionability (see this session's
       assessment below) — short, outcome-oriented, "given X do Y".
-- [ ] Cross-reference the schema `description`s with `formSchema.json` labels
+- [x] Cross-reference the schema `description`s with `formSchema.json` labels
       so agents map human field names <-> dotted paths.
-- [ ] Keep total `description` concise (< 128 char target where sensible) so
+- [x] Keep total `description` concise (< 128 char target where sensible) so
       discovery payloads stay small.
 
 ---

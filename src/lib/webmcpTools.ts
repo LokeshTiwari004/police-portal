@@ -52,6 +52,7 @@ function requiredFieldsNow(): string[] {
 
 interface ToolDefinition {
   name: string
+  title: string
   description: string
   inputSchema: Record<string, unknown>
   execute: (input: Record<string, unknown>, opts?: { signal?: AbortSignal }) => Promise<unknown> | unknown
@@ -145,16 +146,17 @@ function getFirTools(): ToolDefinition[] {
   return [
     {
       name: 'fir.identify_required_fields',
+      title: 'Identify required FIR fields',
       description:
-        '[FIR] Given the selected offence sections, return the list of form fields that are ' +
-        'currently live on the page, which are required, and which are hidden-but-will-be-needed.',
+        'Return which FIR form fields are required now and which become required ' +
+        'when a given IPC section is answered. Read this before filling the form.',
       inputSchema: {
         type: 'object',
         properties: {
           sections: {
             type: 'array',
             items: { type: 'string' },
-            description: 'IPC / special-act section codes, e.g. ["379"]',
+            description: 'IPC / special-act section codes, e.g. ["379"] (must match formSchema option values).',
           },
         },
         required: ['sections'],
@@ -172,18 +174,22 @@ function getFirTools(): ToolDefinition[] {
     },
     {
       name: 'fir.fill_field',
+      title: 'Fill a FIR form field',
       description:
-        '[FIR] Fill a single field in the FIR form. Provide the field name and value. ' +
-        'Returns a structured result: { success, error? , revealedFields? }. If a field ' +
-        'becomes newly required because of this value, revealedFields lists them.',
+        'Fill one FIR field by dotted path and value. Returns revealed fields newly ' +
+        'required by this value. The running form updates live.',
       inputSchema: {
         type: 'object',
         properties: {
           field: {
             type: 'string',
-            description: 'Field name. Use dotted path e.g. complainant.name, offense.sections, narrative.',
+            description:
+              "Dotted field path. Always-visible: complainant.name, complainant.fatherName, " +
+              "complainant.address, complainant.phone, complainant.email, offense.date, offense.time, " +
+              "offense.place, offense.beat, offense.sections, accused.name, accused.age, accused.sex, " +
+              "accused.description, narrative. Conditional (shown for some sections): property, witnesses.",
           },
-          value: { description: 'Value to set. May be a string, number, boolean, or array.', type: ['string', 'number', 'boolean', 'array'] },
+          value: { description: 'Value to set. Use a string for text, array of strings for offense.sections/property.', type: ['string', 'number', 'boolean', 'array'] },
         },
         required: ['field', 'value'],
       },
@@ -217,16 +223,16 @@ function getFirTools(): ToolDefinition[] {
     },
     {
       name: 'fir.flag_missing',
+      title: 'Flag fields for human review',
       description:
-        '[FIR] Flag one or more fields as needing human review. Marks them in the UI so ' +
-        'an officer can complete them before the FIR is submitted.',
+        'Mark FIR fields as needing an officer to review before submission.',
       inputSchema: {
         type: 'object',
         properties: {
           fields: {
             type: 'array',
             items: { type: 'string' },
-            description: 'Field names that are incomplete or ambiguous.',
+            description: 'Dotted field paths that are incomplete or ambiguous (e.g. ["complainant.address"]).',
           },
           reason: { type: 'string', description: 'Why these need human review.' },
         },
@@ -244,9 +250,10 @@ function getFirTools(): ToolDefinition[] {
     },
     {
       name: 'fir.validate_form',
+      title: 'Validate the FIR form',
       description:
-        '[FIR] Validate the entire FIR form. Returns { valid, errors } where errors maps ' +
-        'field names to human-readable messages.',
+        "Validate the whole FIR form. Returns { valid, errors } with field -> message. " +
+        "Matches what the on-screen form shows.",
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       execute: async () => {
         const incident = incidentStore.list()[0] || incidentStore.create()
@@ -262,8 +269,9 @@ function getFirTools(): ToolDefinition[] {
     },
     {
       name: 'fir.submit',
+      title: 'Submit the FIR',
       description:
-        '[FIR] Submit the completed FIR. Persists the record and marks it closed/draft-submitted.',
+        'Submit the completed FIR after it passes validation. Persists the record.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       execute: async () => {
         const incident = incidentStore.list()[0]
@@ -282,14 +290,19 @@ function getFirTools(): ToolDefinition[] {
     },
     {
       name: 'fir.find_similar_cases',
+      title: 'Find similar past FIRs',
       description:
-        '[FIR] Search the case archive for prior FIRs matching offence sections. ' +
-        'Useful for investigators to find precedent / repeat offenders.',
+        'Search the case archive for prior FIRs matching the given IPC sections ' +
+        '(optional location filter). Useful for precedent and repeat offenders.',
       inputSchema: {
         type: 'object',
         properties: {
-          sections: { type: 'array', items: { type: 'string' } },
-          location: { type: 'string', description: 'Optional area / district to constrain search.' },
+          sections: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'IPC section codes to match, e.g. ["379"].',
+          },
+          location: { type: 'string', description: 'Optional place / area substring to constrain search.' },
         },
         required: ['sections'],
       },
@@ -319,9 +332,10 @@ function getChallanTools(): ToolDefinition[] {
   return [
     {
       name: 'challan.lookup_rc',
+      title: 'Look up vehicle by RC',
       description:
-        '[Challan] Look up a vehicle by registration number (RC). Returns owner name, ' +
-        'address, vehicle class, engine capacity, and fuel type from the transport database.',
+        'Look up a vehicle by registration number. Returns owner, address, vehicle ' +
+        'class, engine capacity and fuel type from the transport database.',
       inputSchema: {
         type: 'object',
         properties: { rcNumber: { type: 'string', description: 'Vehicle registration number, e.g. UP14C1234.' } },
@@ -334,9 +348,10 @@ function getChallanTools(): ToolDefinition[] {
     },
     {
       name: 'challan.auto_calculate_fine',
+      title: 'Calculate traffic fine',
       description:
-        '[Challan] Compute the traffic fine for a given offence and vehicle class based on ' +
-        'the Motor Vehicles Act matrix. Returns amount in rupees.',
+        'Compute the traffic fine for an offence and vehicle class from the Motor ' +
+        'Vehicles Act matrix. Returns the amount in rupees.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -355,7 +370,8 @@ function getChallanTools(): ToolDefinition[] {
     },
     {
       name: 'challan.submit',
-      description: '[Challan] Finalize and persist a traffic challan.',
+      title: 'Submit traffic challan',
+      description: 'Finalize and persist a traffic challan.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       execute: async () => JSON.stringify({ ok: true, message: 'Challan persisted (stub)' }),
     },
@@ -370,12 +386,13 @@ function getDispatchTools(): ToolDefinition[] {
   return [
     {
       name: 'dispatch.classify_nature',
+      title: 'Classify emergency nature code',
       description:
-        '[Dispatch] Map a natural-language description of an emergency to an official ' +
-        'ERSS-112 nature code (e.g. "heart attack" -> MED-001).',
+        'Map a natural-language emergency into an official ERSS-112 nature code ' +
+        '("heart attack" -> MED-001, "fire" -> FIR-003).',
       inputSchema: {
         type: 'object',
-        properties: { description: { type: 'string' } },
+        properties: { description: { type: 'string', description: 'Free-text emergency description.' } },
         required: ['description'],
       },
       execute: async ({ description }) => {
@@ -390,10 +407,11 @@ function getDispatchTools(): ToolDefinition[] {
     },
     {
       name: 'dispatch.get_available_units',
-      description: '[Dispatch] Return available response units (ambulances, patrol cars, fire tenders).',
+      title: 'List available response units',
+      description: 'Return available response units (ambulance, patrol, fire) and ETA.',
       inputSchema: {
         type: 'object',
-        properties: { type: { type: 'string', description: 'Unit type filter.' } },
+        properties: { type: { type: 'string', description: 'Optional unit type filter (e.g. Ambulance).' } },
       },
       execute: async () =>
         JSON.stringify({
@@ -407,12 +425,14 @@ function getDispatchTools(): ToolDefinition[] {
     },
     {
       name: 'dispatch.assign_unit',
-      description: '[Dispatch] Assign a response unit to an incident. Escalates if the unit is busy.',
+      title: 'Assign response unit to incident',
+      description:
+        'Assign a response unit to an incident. Sets the incident status to dispatched.',
       inputSchema: {
         type: 'object',
         properties: {
-          unitId: { type: 'string' },
-          incidentId: { type: 'string' },
+          unitId: { type: 'string', description: 'Unit id from dispatch.get_available_units, e.g. PCR-88.' },
+          incidentId: { type: 'string', description: 'Incident id; defaults to the active incident.' },
         },
         required: ['unitId'],
       },
