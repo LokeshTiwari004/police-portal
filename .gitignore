@@ -28,3 +28,7 @@ coverage
 .conversations/
 # Literature reviews regenerated from other sessions (reference only, not shipped)
 IndianPolice_DigitalSystems_LiteratureReview_2014-2026.md
+
+# understand knowledge graph (generated)
+.ua/
+.understand-anything/
