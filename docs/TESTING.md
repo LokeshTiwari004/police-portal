@@ -54,15 +54,15 @@ it('fill → validate → submit persists a complete FIR', async () => {
   await registerTools('fir')
   const tools = Object.fromEntries(mc.registered.map((t) => [t.name, t]))
 
-  await tools['fir/fill_field'].execute({ field: 'complainant.name', value: 'Alice' })
-  await tools['fir/fill_field'].execute({ field: 'complainant.phone', value: '9876543210' })
-  await tools['fir/fill_field'].execute({ field: 'offense.sections', value: ['379'] })
-  await tools['fir/fill_field'].execute({ field: 'narrative', value: 'Bike stolen' })
+  await tools['fir.fill_field'].execute({ field: 'complainant.name', value: 'Alice' })
+  await tools['fir.fill_field'].execute({ field: 'complainant.phone', value: '9876543210' })
+  await tools['fir.fill_field'].execute({ field: 'offense.sections', value: ['379'] })
+  await tools['fir.fill_field'].execute({ field: 'narrative', value: 'Bike stolen' })
 
-  const v = JSON.parse((await tools['fir/validate_form'].execute({})) as string)
+  const v = JSON.parse((await tools['fir.validate_form'].execute({})) as string)
   expect(v.valid).toBe(true)
 
-  const s = JSON.parse((await tools['fir/submit'].execute({})) as string)
+  const s = JSON.parse((await tools['fir.submit'].execute({})) as string)
   expect(s.ok).toBe(true)
 
   const stored = incidentStore.list()[0]
@@ -77,7 +77,7 @@ it('fill → validate → submit persists a complete FIR', async () => {
 
 ## 2. Validation parity (correctness)
 
-**Goal**: `fir/validate_form` returns the same error set the FIRForm UI shows for
+**Goal**: `fir.validate_form` returns the same error set the FIRForm UI shows for
 the same state — the shared `validation.ts` must not drift.
 
 **Why**: the bug fix in this repo was a parity break — UI required `narrative`,
@@ -159,17 +159,17 @@ is absent). Keep it green — it guards the no-modelContext path.
 
 ## 5. Tool discovery completeness (agent collaboration)
 
-**Goal**: all `fir/*` (6), `challan/*` (3), `dispatch/*` (3) register on the
+**Goal**: all `fir.*` (6), `challan.*` (3), `dispatch.*` (3) register on the
 corresponding tab switch.
 
 **File**: `src/test/webmcp.integration.test.ts`
 
 ```ts
 const expected = {
-  fir: ['fir/identify_required_fields', 'fir/fill_field', 'fir/flag_missing',
-        'fir/validate_form', 'fir/submit', 'fir/find_similar_cases'],
-  challan: ['challan/lookup_rc', 'challan/auto_calculate_fine', 'challan/submit'],
-  dispatch: ['dispatch/classify_nature', 'dispatch/get_available_units', 'dispatch/assign_unit'],
+  fir: ['fir.identify_required_fields', 'fir.fill_field', 'fir.flag_missing',
+        'fir.validate_form', 'fir.submit', 'fir.find_similar_cases'],
+  challan: ['challan.lookup_rc', 'challan.auto_calculate_fine', 'challan.submit'],
+  dispatch: ['dispatch.classify_nature', 'dispatch.get_available_units', 'dispatch.assign_unit'],
 }
 
 for (const [module, names] of Object.entries(expected)) {
@@ -197,14 +197,14 @@ it('dispatch mutates the SAME record the FIR created', async () => {
   const mc = mockModelContext()
   await registerTools('fir')
   const fir = Object.fromEntries(mc.registered.map((t) => [t.name, t]))
-  await fir['fir/fill_field'].execute({ field: 'complainant.name', value: 'Alice' })
+  await fir['fir.fill_field'].execute({ field: 'complainant.name', value: 'Alice' })
   const inc = incidentStore.list()[0]          // the shared record
   const id = inc.id
 
   mockModelContext()                            // switch tab: re-register dispatch
   await registerTools('dispatch')
   const dis = Object.fromEntries(mc.registered.map((t) => [t.name, t]))
-  await dis['dispatch/assign_unit'].execute({ unitId: 'PCR-88', incidentId: id })
+  await dis['dispatch.assign_unit'].execute({ unitId: 'PCR-88', incidentId: id })
 
   const updated = incidentStore.get(id)
   expect(updated?.status).toBe('dispatched')
@@ -262,9 +262,9 @@ afterEach(() => { (console.error as unknown as ReturnType<typeof vi.fn>).mockRes
 ## Judges' walkthrough (demo script)
 
 1. Human + agent edit the same live FIR form simultaneously.
-2. Agent calls `fir/fill_field` on `offense.sections` → `property` section
+2. Agent calls `fir.fill_field` on `offense.sections` → `property` section
    conditionally reveals (schema-driven).
-3. Agent calls `fir/flag_missing` → field surfaces for human review.
+3. Agent calls `fir.flag_missing` → field surfaces for human review.
 4. Challan + dispatch consume the same incident (integration story).
 5. Show the metrics above on a one-screen scorecard.
 

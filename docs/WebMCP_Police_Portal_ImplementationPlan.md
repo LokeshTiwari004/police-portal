@@ -53,12 +53,12 @@ main.jsx
 ### Tool Schema (registered via document.modelContext)
 | Tool Name | Action |
 |---|---|
-| `fir/register_complaint` | Initializes a new incident record with complainant info |
-| `fir/fill_field` | Fills any visible or future-revealed field (uses schema for conditional logic) |
-| `fir/flag_missing` | Highlights required-but-empty fields |
-| `fir/find_similar_cases` | Queries local/mock NCRB-style case archive for precedent offenses |
-| `fir/validate_form` | Runs full-form validation, returns structured errors |
-| `fir/submit` | Validates + persists to mock DB |
+| `fir.register_complaint` | Initializes a new incident record with complainant info |
+| `fir.fill_field` | Fills any visible or future-revealed field (uses schema for conditional logic) |
+| `fir.flag_missing` | Highlights required-but-empty fields |
+| `fir.find_similar_cases` | Queries local/mock NCRB-style case archive for precedent offenses |
+| `fir.validate_form` | Runs full-form validation, returns structured errors |
+| `fir.submit` | Validates + persists to mock DB |
 
 ### Form Behavior
 - Rendered as a tabbed wizard (sections shown conditionally based on selections)
@@ -122,7 +122,7 @@ In-memory store with functions:
    ```
 5. Define static mock data (`formSchema.json`, `offenseCodes.json`)
 6. Wire up `Dashboard.jsx` → `FIRForm.jsx`
-7. Create `webmcpTools.js`: register all `fir/*` tools
+7. Create `webmcpTools.js`: register all `fir.*` tools
 8. Integrate validation logic (`validateField`, `validateForm`)
 9. Test manually in Chrome with `chrome://flags/#enable-webmcp-testing`
 
@@ -133,10 +133,10 @@ In-memory store with functions:
 ### Tool Schema
 | Tool Name | Action |
 |---|---|
-| `challan/lookup_rc` | Fetches vehicle details from mock Vahan DB |
-| `challan/auto_calculate_fine` | Computes fine based on offense + vehicle class |
-| `challan/set_evidence_photo` | Attaches photo evidence to challan ID |
-| `challan/submit` | Finalizes and stores in mock DB |
+| `challan.lookup_rc` | Fetches vehicle details from mock Vahan DB |
+| `challan.auto_calculate_fine` | Computes fine based on offense + vehicle class |
+| `challan.set_evidence_photo` | Attaches photo evidence to challan ID |
+| `challan.submit` | Finalizes and stores in mock DB |
 
 ### Key Logic
 - `auto_calculate_fine`: uses hardcoded MVA matrix (`mvaFines.json`)
@@ -156,8 +156,8 @@ In-memory store with functions:
 ### Dev Steps (Post-FIR Core)
 1. Build `ChallanGenerator.jsx` component
 2. Implement `auto_calculate_fine()` logic
-3. Link challan to incident: `challan/create_from_incident(incident_id)`
-4. Register `challan/*` tools in `webmcpTools.js`
+3. Link challan to incident: `challan.create_from_incident(incident_id)`
+4. Register `challan.*` tools in `webmcpTools.js`
 
 ---
 
@@ -168,11 +168,11 @@ In-memory store with functions:
 ### Tool Schema
 | Tool Name | Action |
 |---|---|
-| `dispatch/triage_channel` | Triage an incoming message from Voice/SMS/WhatsApp/Chatbot/IoT |
-| `dispatch/classify_nature` | Maps natural-language description → ERSS nature code |
-| `dispatch/get_available_units` | Returns nearby units (ambulances, patrol cars, etc.) |
-| `dispatch/assign_unit` | Assigns unit to incident; escalates if unavailable |
-| `dispatch/send_notification` | Sends SMS/email update to complainant |
+| `dispatch.triage_channel` | Triage an incoming message from Voice/SMS/WhatsApp/Chatbot/IoT |
+| `dispatch.classify_nature` | Maps natural-language description → ERSS nature code |
+| `dispatch.get_available_units` | Returns nearby units (ambulances, patrol cars, etc.) |
+| `dispatch.assign_unit` | Assigns unit to incident; escalates if unavailable |
+| `dispatch.send_notification` | Sends SMS/email update to complainant |
 
 ### Key Logic
 - Live unit simulation: mock WebSocket pushes updated GPS positions every 5 sec
@@ -183,8 +183,8 @@ In-memory store with functions:
 1. Create `DispatchConsole.jsx` with live unit map (div grid or Leaflet)
 2. Simulate WebSocket with `setInterval`
 3. Hook into shared `incidentStore.js`
-4. Register `dispatch/*` tools
-5. Test cross-module linking (`fir/incident_id` → `dispatch/triage_channel`)
+4. Register `dispatch.*` tools
+5. Test cross-module linking (`fir.incident_id` → `dispatch.triage_channel`)
 
 ---
 
@@ -204,16 +204,16 @@ export async function registerAllTools(currentTab = null) {
 
   const toolsToRegister = {
     fir: () => {
-      document.modelContext.registerTool({ name: "fir/fill_field", ... });
-      document.modelContext.registerTool({ name: "fir/flag_missing", ... });
+      document.modelContext.registerTool({ name: "fir.fill_field", ... });
+      document.modelContext.registerTool({ name: "fir.flag_missing", ... });
       // ...etc
     },
     challan: () => {
-      document.modelContext.registerTool({ name: "challan/lookup_rc", ... });
+      document.modelContext.registerTool({ name: "challan.lookup_rc", ... });
       // ...
     },
     dispatch: () => {
-      document.modelContext.registerTool({ name: "dispatch/triage_channel", ... });
+      document.modelContext.registerTool({ name: "dispatch.triage_channel", ... });
       // ...
     }
   };
@@ -234,14 +234,14 @@ export async function registerAllTools(currentTab = null) {
 4. Reload browser
 5. Open DevTools Console → confirm tools registered:
    ```
-   Object.keys(document.modelContext.tools) // ["fir/fill_field", ...]
+   Object.keys(document.modelContext.tools) // ["fir.fill_field", ...]
    ```
 
 ### Agent Simulation
 Use [Model Context Tool Inspector Extension](https://chrome.google.com/webstore/detail/model-context-tool-inspec/gbpdfapgefenggkahomfgkhfehlcenpd) or script:
 ```js
 const tools = await document.modelContext.getTools();
-await document.modelContext.executeTool(tools.find(t => t.name === 'fir/fill_field'), {field: 'complaint_text', value: 'Stolen bike'});
+await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), {field: 'complaint_text', value: 'Stolen bike'});
 ```
 
 ---
@@ -282,7 +282,7 @@ src/
 | Mock data (form schema, offense codes, etc.) | 1h |
 | Build FIR form UI | 2h |
 | Wire up validation logic | 1h |
-| Register `fir/*` WebMCP tools | 1h |
+| Register `fir.*` WebMCP tools | 1h |
 | Local testing (Chrome + flags) | 1h |
 | Add e-Challan module | 2h |
 | Add ERSS-112 dispatch console (stretch) | 2h |
@@ -305,9 +305,9 @@ src/
 
 ## Priority Build Order
 1. **Start with `formSchema.json` + `validation.js`** → foundation for everything
-2. **Build `FIRForm.jsx` + register `fir/*` tools** → core MVP
-3. **Add `challan/*` module** → natural extension reusing incident store
-4. **Add `dispatch/*` only if time allows** → nice-to-have showcase
+2. **Build `FIRForm.jsx` + register `fir.*` tools** → core MVP
+3. **Add `challan.*` module** → natural extension reusing incident store
+4. **Add `dispatch.*` only if time allows** → nice-to-have showcase
 
 ---
 

@@ -8,7 +8,7 @@ import { clearStore } from './modelContextMock'
 /**
  * Validation parity test.
  *
- * The UI (FIRForm) and the WebMCP tools (fir/validate_form, fir/submit) share
+ * The UI (FIRForm) and the WebMCP tools (fir.validate_form, fir.submit) share
  * validation.ts but feed it from different paths. A parity regression is when
  * the human's form and the agent's tool disagree about a field — e.g. the old
  * 'narative' typo made the tool accept an empty narrative while the UI rejected
@@ -19,7 +19,7 @@ function currentIncident() {
   return incidentStore.list()[0] ?? incidentStore.create()
 }
 
-describe('validation parity: FIRForm UI vs fir/validate_form tool', () => {
+describe('validation parity: FIRForm UI vs fir.validate_form tool', () => {
   beforeEach(clearStore)
 
   it('both the UI and the tool flag an empty narrative as required', () => {
@@ -29,7 +29,7 @@ describe('validation parity: FIRForm UI vs fir/validate_form tool', () => {
       narrative: '',
     })
 
-    // Tool path (same flat shape fir/validate_form and fir/submit build).
+    // Tool path (same flat shape fir.validate_form and fir.submit build).
     const tool = validateForm({
       'complainant.name': 'Alice',
       'complainant.phone': '9876543210',

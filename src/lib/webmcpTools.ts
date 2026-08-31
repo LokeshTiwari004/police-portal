@@ -144,7 +144,7 @@ function getToolsForModule(module: 'fir' | 'challan' | 'dispatch'): ToolDefiniti
 function getFirTools(): ToolDefinition[] {
   return [
     {
-      name: 'fir/identify_required_fields',
+      name: 'fir.identify_required_fields',
       description:
         '[FIR] Given the selected offence sections, return the list of form fields that are ' +
         'currently live on the page, which are required, and which are hidden-but-will-be-needed.',
@@ -165,13 +165,13 @@ function getFirTools(): ToolDefinition[] {
         return JSON.stringify({
           requiredNow: requiredFieldsNow(),
           hiddenWhenRevealed: hidden,
-          tip: 'Use fir/fill_field to populate fields. Use fir/flag_missing to surface gaps.',
+          tip: 'Use fir.fill_field to populate fields. Use fir.flag_missing to surface gaps.',
         })
       },
       annotations: { readOnlyHint: true },
     },
     {
-      name: 'fir/fill_field',
+      name: 'fir.fill_field',
       description:
         '[FIR] Fill a single field in the FIR form. Provide the field name and value. ' +
         'Returns a structured result: { success, error? , revealedFields? }. If a field ' +
@@ -216,7 +216,7 @@ function getFirTools(): ToolDefinition[] {
       },
     },
     {
-      name: 'fir/flag_missing',
+      name: 'fir.flag_missing',
       description:
         '[FIR] Flag one or more fields as needing human review. Marks them in the UI so ' +
         'an officer can complete them before the FIR is submitted.',
@@ -243,7 +243,7 @@ function getFirTools(): ToolDefinition[] {
       },
     },
     {
-      name: 'fir/validate_form',
+      name: 'fir.validate_form',
       description:
         '[FIR] Validate the entire FIR form. Returns { valid, errors } where errors maps ' +
         'field names to human-readable messages.',
@@ -261,7 +261,7 @@ function getFirTools(): ToolDefinition[] {
       annotations: { readOnlyHint: true },
     },
     {
-      name: 'fir/submit',
+      name: 'fir.submit',
       description:
         '[FIR] Submit the completed FIR. Persists the record and marks it closed/draft-submitted.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
@@ -281,7 +281,7 @@ function getFirTools(): ToolDefinition[] {
       },
     },
     {
-      name: 'fir/find_similar_cases',
+      name: 'fir.find_similar_cases',
       description:
         '[FIR] Search the case archive for prior FIRs matching offence sections. ' +
         'Useful for investigators to find precedent / repeat offenders.',
@@ -318,7 +318,7 @@ function getFirTools(): ToolDefinition[] {
 function getChallanTools(): ToolDefinition[] {
   return [
     {
-      name: 'challan/lookup_rc',
+      name: 'challan.lookup_rc',
       description:
         '[Challan] Look up a vehicle by registration number (RC). Returns owner name, ' +
         'address, vehicle class, engine capacity, and fuel type from the transport database.',
@@ -333,7 +333,7 @@ function getChallanTools(): ToolDefinition[] {
       },
     },
     {
-      name: 'challan/auto_calculate_fine',
+      name: 'challan.auto_calculate_fine',
       description:
         '[Challan] Compute the traffic fine for a given offence and vehicle class based on ' +
         'the Motor Vehicles Act matrix. Returns amount in rupees.',
@@ -354,7 +354,7 @@ function getChallanTools(): ToolDefinition[] {
       },
     },
     {
-      name: 'challan/submit',
+      name: 'challan.submit',
       description: '[Challan] Finalize and persist a traffic challan.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       execute: async () => JSON.stringify({ ok: true, message: 'Challan persisted (stub)' }),
@@ -369,7 +369,7 @@ function getChallanTools(): ToolDefinition[] {
 function getDispatchTools(): ToolDefinition[] {
   return [
     {
-      name: 'dispatch/classify_nature',
+      name: 'dispatch.classify_nature',
       description:
         '[Dispatch] Map a natural-language description of an emergency to an official ' +
         'ERSS-112 nature code (e.g. "heart attack" -> MED-001).',
@@ -389,7 +389,7 @@ function getDispatchTools(): ToolDefinition[] {
       annotations: { readOnlyHint: true },
     },
     {
-      name: 'dispatch/get_available_units',
+      name: 'dispatch.get_available_units',
       description: '[Dispatch] Return available response units (ambulances, patrol cars, fire tenders).',
       inputSchema: {
         type: 'object',
@@ -406,7 +406,7 @@ function getDispatchTools(): ToolDefinition[] {
       annotations: { readOnlyHint: true },
     },
     {
-      name: 'dispatch/assign_unit',
+      name: 'dispatch.assign_unit',
       description: '[Dispatch] Assign a response unit to an incident. Escalates if the unit is busy.',
       inputSchema: {
         type: 'object',

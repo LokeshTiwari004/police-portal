@@ -19,7 +19,7 @@ structure and validation rules:
   fill (guarded by a parity test).
 - **Conditional reveal** — when the agent sets an offence section (e.g. `379`
   theft), the property section appears and becomes required, in real time.
-- **Human-in-the-loop** — `fir/flag_missing` surfaces ambiguous fields for an
+- **Human-in-the-loop** — `fir.flag_missing` surfaces ambiguous fields for an
   officer to review rather than the agent guessing.
 - **Cross-module state** — one incident record flows FIR → e-Challan →
   ERSS-112 dispatch through a shared store.
@@ -28,9 +28,9 @@ structure and validation rules:
 
 | Module | Workspace | Tools |
 |---|---|---|
-| **FIR Copilot** (Must-Have) | Schema-driven dynamic form, inline validation, missing-field summary | `fir/identify_required_fields`, `fir/fill_field`, `fir/flag_missing`, `fir/validate_form`, `fir/submit`, `fir/find_similar_cases` |
-| **e-Challan** (Should-Have) | RC lookup + MVA fine auto-calc, linked to incident | `challan/lookup_rc`, `challan/auto_calculate_fine`, `challan/submit` |
-| **ERSS-112 Dispatch** (Stretch) | Incident queue, nature classification, unit assignment | `dispatch/classify_nature`, `dispatch/get_available_units`, `dispatch/assign_unit` |
+| **FIR Copilot** (Must-Have) | Schema-driven dynamic form, inline validation, missing-field summary | `fir.identify_required_fields`, `fir.fill_field`, `fir.flag_missing`, `fir.validate_form`, `fir.submit`, `fir.find_similar_cases` |
+| **e-Challan** (Should-Have) | RC lookup + MVA fine auto-calc, linked to incident | `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.submit` |
+| **ERSS-112 Dispatch** (Stretch) | Incident queue, nature classification, unit assignment | `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit` |
 | **Metrics** (Eval) | Live scorecard of tool latency, call volume, registration time | — |
 
 ## Setup
@@ -49,7 +49,7 @@ npm run dev        # http://localhost:5173
 
 ```js
 const tools = await document.modelContext.getTools();
-await document.modelContext.executeTool(tools.find(t => t.name === 'fir/fill_field'), { field: 'complainant.name', value: 'Alice' });
+await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), { field: 'complainant.name', value: 'Alice' });
 ```
 
 Tools are registered per tab via `document.modelContext.registerTool({...})`

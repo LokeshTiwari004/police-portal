@@ -13,7 +13,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - Run tests matching a name: `npx vitest run -t "fill_field"`
 
 ## Architecture
-- `/src/lib/webmcpTools.ts` — WebMCP tool registry. Tools use `/`-separated names (`fir/fill_field`, `challan/lookup_rc`, `dispatch/assign_unit`). `registerTools(module)` is called on tab switch in `App.tsx`; an AbortController un-registers the previous module's tools to keep discovery clean.
+- `/src/lib/webmcpTools.ts` — WebMCP tool registry. Tool names may contain only `[A-Za-z0-9_.-]` — WebMCP rejects `/` with `InvalidStateError: Invalid tool name` (see the slash-rename fix history). Names are module-prefixed with `.` (`fir.fill_field`, `challan.lookup_rc`, `dispatch.assign_unit`). `registerTools(module)` is called on tab switch in `App.tsx`; an AbortController un-registers the previous module's tools to keep discovery clean.
 - `/src/lib/incidentStore.ts` — single shared, localStorage-backed store for ALL modules (key `police-portal:incidents`). Reuse it; don't build per-module storage. Incident schema is the shared contract across FIR/challan/dispatch. Note: `create()`'s param type requires `offense`, `accused`, `narrative` even though runtime defaults exist — pass a full object or omit the arg entirely.
 - `/src/lib/validation.ts` — validation shared by both UI and tools so the agent's view matches the form. `formSchema.json` drives conditional field visibility/requirements.
 - `/src/data/formSchema.json` + `offenseCodes.json` — static mock data. Plan also calls for `mockIncidents.json`, `mvaFines.json`, `mockRC.json`, `natureCodes.json` (not yet present).
@@ -24,7 +24,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - Test files live next to code: `src/**/*.test.ts` / `*.test.tsx` (config include matches this pattern).
 - Setup: `src/test/setup.ts` imports `@testing-library/jest-dom/vitest` for DOM matchers (`toBeInTheDocument`, etc.).
 - Tools: `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`.
-- Existing suites: unit (`src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`), integration (`src/test/webmcp.integration.test.ts` mock `document.modelContext` to drive `fir/*` tools against the store end-to-end), system (`src/App.test.tsx` renders the app shell and tab switching).
+- Existing suites: unit (`src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`), integration (`src/test/webmcp.integration.test.ts` mock `document.modelContext` to drive `fir.*` tools against the store end-to-end), system (`src/App.test.tsx` renders the app shell and tab switching).
 - `document.modelContext` is absent in jsdom — mock it in integration tests (see `src/test/webmcp.integration.test.ts`); `App.tsx` degrades to a "WebMCP tools pending" hint.
 - Clear `localStorage` between tests (storage key `police-portal:incidents`) — tests share jsdom's persisted storage.
 - Coverage: v8; current overall ~71% lines. Prefer covering new logic rather than padding challan/dispatch stub paths.
