@@ -69,7 +69,7 @@ export function validateForm(form: Record<string, unknown>): {
 } {
   const errors: Record<string, string> = {}
   for (const [field, value] of Object.entries(form)) {
-    const err = validateField(field, value, field === 'narative' ? false : true)
+    const err = validateField(field, value, true)
     if (err) errors[field] = err
   }
   return { valid: Object.keys(errors).length === 0, errors }

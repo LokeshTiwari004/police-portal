@@ -53,6 +53,17 @@ describe('validateForm', () => {
     })
     expect(valid).toBe(false)
     expect(errors['complainant.name']).toMatch(/required/)
+    expect(errors['narrative']).toMatch(/required/)
+  })
+
+  it('flags empty narrative as required', () => {
+    const { valid, errors } = validateForm({
+      'complainant.name': 'Alice',
+      'complainant.phone': '9876543210',
+      narrative: '',
+    })
+    expect(valid).toBe(false)
+    expect(errors['narrative']).toMatch(/required/)
   })
 })
 
