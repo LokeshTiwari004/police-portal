@@ -6,6 +6,8 @@
  * localStorage, so call `clearStore()` in `beforeEach`.
  */
 
+import { resetRegisteredTools } from '../lib/webmcpTools'
+
 export interface MockedModelContext {
   registered: Array<{ name: string; execute: (input: unknown, o?: { signal?: AbortSignal }) => unknown }>
   registerTool: (tool: unknown) => Promise<void>
@@ -13,10 +15,17 @@ export interface MockedModelContext {
 }
 
 export function mockModelContext(): MockedModelContext {
+  resetRegisteredTools()
   const registered: Array<{ name: string; execute: (i: unknown, o?: { signal?: AbortSignal }) => unknown }> = []
   const mc: MockedModelContext = {
     registered,
     async registerTool(tool: unknown) {
+      const { name } = tool as { name: string }
+      // Mirror real Chrome: no unregister and duplicate names are rejected with
+      // InvalidStateError — keeps the idempotency regression covered.
+      if (registered.some((t) => t.name === name)) {
+        throw new DOMException('Duplicate tool name', 'InvalidStateError')
+      }
       registered.push(tool as (typeof registered)[number])
     },
     async getTools() {

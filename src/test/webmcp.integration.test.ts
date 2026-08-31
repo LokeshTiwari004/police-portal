@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { incidentStore } from '../lib/incidentStore'
-import { registerTools } from '../lib/webmcpTools'
+import { registerTools, registerAllTools } from '../lib/webmcpTools'
 import { mockModelContext, clearStore } from './modelContextMock'
 import schemaJson from '../data/formSchema.json'
 
@@ -32,6 +32,46 @@ describe('fir.* tools integrate with incidentStore', () => {
     expect(names).toContain('fir.fill_field')
     expect(names).toContain('fir.validate_form')
     expect(names).toContain('fir.submit')
+  })
+
+  it('re-registering (StrictMode remount, tab switch) does not raise duplicate-name errors', async () => {
+    const mc = mockModelContext()
+    await registerTools('fir')
+    const afterFirst = mc.registered.length
+    expect(afterFirst).toBe(6)
+
+    // Second call with the same module — e.g. React StrictMode's double-effect
+    // mount in dev, or clicking back onto the FIR tab. No console warnings, and
+    // the mock's duplicate rejection must never fire.
+    const warn = console.warn
+    const warnings: unknown[] = []
+    console.warn = (...a) => warnings.push(a)
+    try {
+      await registerTools('fir')
+    } finally {
+      console.warn = warn
+    }
+    expect(warnings).toHaveLength(0)
+    expect(mc.registered.length).toBe(afterFirst)
+  })
+
+  it('registerAllTools registers each module once even when some tools are already live', async () => {
+    const mc = mockModelContext()
+    await registerTools('fir')
+    const warn = console.warn
+    const warnings: unknown[] = []
+    console.warn = (...a) => warnings.push(a)
+    try {
+      await registerAllTools()
+    } finally {
+      console.warn = warn
+    }
+    expect(warnings).toHaveLength(0)
+    expect(mc.registered.length).toBe(12)
+    const names = mc.registered.map((t) => t.name)
+    for (const name of ['fir.submit', 'challan.lookup_rc', 'dispatch.assign_unit']) {
+      expect(names).toContain(name)
+    }
   })
 
   it('identify_required_fields derives requiredNow from the schema, not a hardcoded list', async () => {
