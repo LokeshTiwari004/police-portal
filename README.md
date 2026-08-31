@@ -64,6 +64,17 @@ await document.modelContext.executeTool(
 > and is separate from WebMCP. To demo an agent using your tools, use the Tool
 > Inspector extension or the ChatGPT in-app browser.
 
+### External agent (MCP bridge)
+
+The same 12 tools are exposed over the Model Context Protocol so any external
+agent — Claude Desktop, VS Code, an MCP client — can drive the portal
+independent of the browser. Tool logic is shared (`src/lib/toolRegistry.ts`);
+the browser adapts it to WebMCP, the bridge adapts it to MCP.
+
+```bash
+npm run mcp   # stdio MCP server on port; point an MCP client at it
+```
+
 Registration via `document.modelContext.registerTool` (`src/lib/webmcpTools.ts`)
 is **idempotent**: WebMCP has no unregister API, so each name is registered at
 most once per page load; tab switches and StrictMode remounts never error.
@@ -76,6 +87,7 @@ most once per page load; tab switches and StrictMode remounts never error.
 | `npm run build` | Type-check (`tsc -b`) + build |
 | `npm run lint` | Oxlint |
 | `npm test` | Vitest suite (unit, component, integration, system, parity) |
+| `npm run mcp` | External-agent MCP bridge (stdio) |
 
 ## Docs
 

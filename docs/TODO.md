@@ -143,24 +143,32 @@ Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a 
 - [ ] Push to GitHub (public repo with LICENSE)
 - [ ] Update README with setup + tool list + live URL
 
-## 🤖 External-agent bridge (note: OPTIONAL — not required for hackathon submission)
+## 🤖 External-agent bridge (done — Node MCP server over shared tool logic)
 
 A WebMCP tool is callable only by an agent that lives in the same document
-(extension / in-app browser / inspector). Built-in Gemini auto-browse does NOT
-call WebMCP tools. To let an *external* AI (Gemini API, Claude, OpenAI) drive
-them, expose the page's tools over server-side MCP. This proves tool execution
-from a second agent surface and is strong WebMCP-leverage footage, but the
-extension path already demonstrates this — so treat as stretch:
+(extension / in-app browser / inspector). To let an *external* AI (Claude
+Desktop, VS Code, any MCP client) drive the portal, we expose the same 12 tools
+over server-side MCP. Tool definitions are shared: `toolRegistry.ts` is
+environment-agnostic and is adapted to the browser (WebMCP, via
+`webmcpTools.ts`) and to Node (MCP, via `server/mcp-server.ts`).
 
-- [ ] Install an MCP bridge that turns WebMCP `document.modelContext` tools into
-      a server-side MCP endpoint. Options: **WebMCP Bridge** Chrome extension
-      (Web Store "WebMCP Bridge", exposes web-app tools to Claude/VS Code),
-      `@mcp-b/webmcp-polyfill`, or `browser-mcp`.
-- [ ] Point an MCP client (Claude Desktop / VS Code) at the bridge server.
-- [ ] Verify tool discovery (`tools/list`) returns the 12 registered tools.
-- [ ] Verify `tools/call` on `fir.fill_field` mutates the same incidentStore UI
-      shows (they share the page session).
-- [ ] Add a short bridge-demo segment to the video IF it stabilizes quickly.
+- [x] Extract env-agnostic tool definitions into `src/lib/toolRegistry.ts`
+      (all 12 tools, parameterised over an injected `Store`).
+- [x] Add `src/lib/memoryStore.ts` — in-memory `Store` for the Node bridge
+      (no `localStorage`/`document`), mirroring the browser store's generated
+      metadata.
+- [x] `server/mcp-server.ts` — MCP server (stdio) exposing all 12 tools;
+      `createPortalServer()` builds it (testable), `main()` runs only as entry.
+- [x] Add `tsconfig.server.json` + project reference so `npm run build`
+      type-checks the server too.
+- [x] Add `npm run mcp` script.
+- [x] Verify `tools/list` returns the 12 registered tools (title, description,
+      JSON schema, readOnly annotations).
+- [x] Verify `tools/call` on `fir.fill_field` → `validate_form` → `submit`
+      mutates the shared registry's store (in-memory here; the browser uses the
+      same registry against localStorage).
+- [x] Tests: `src/test/mcpBridge.test.ts` (3 tests).
+- [ ] Optional: add a short bridge-demo segment to the video IF it stabilizes.
 
 ## 🧹 Tool-context quality (WebMCP Leverage polish)
 
