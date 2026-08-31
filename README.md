@@ -52,9 +52,10 @@ const tools = await document.modelContext.getTools();
 await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), { field: 'complainant.name', value: 'Alice' });
 ```
 
-Tools are registered per tab via `document.modelContext.registerTool({...})`
-(`src/lib/webmcpTools.ts`); an `AbortController` unregisters the previous
-module's tools on tab switch to keep discovery clean.
+Tools are registered via `document.modelContext.registerTool({...})`
+(`src/lib/webmcpTools.ts`). WebMCP has no unregister API, so registration is
+**idempotent** — each name is registered at most once per page load and calls
+(per-tab on mount, React StrictMode remounts) never re-register or error.
 
 ## Commands
 

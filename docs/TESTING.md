@@ -212,15 +212,15 @@ it('dispatch mutates the SAME record the FIR created', async () => {
 })
 ```
 
-**Also run**: `src/App.test.tsx` tab-switch tests confirm re-registration.
+**Also run**: `src/App.test.tsx` tab-switch tests confirm each tab's view.
 
 ---
 
-## 7. Tab re-registration, no duplicates (performance/UX)
+## 7. Idempotent registration, no duplicates (WebMCP has no unregister)
 
-**Goal**: switching tabs unregisters the old module's tools and registers the
-new one — no duplicate tool names. Backed by the `AbortController` in
-`webmcpTools.ts`.
+**Goal**: WebMCP has no unregister API, so re-registering a name (tab switch,
+React StrictMode dev double-mount) must be a no-op — no "Duplicate tool name"
+errors. Backed by claim-before-register in `webmcpTools.ts`.
 
 **File**: `src/test/webmcp.integration.test.ts`
 
@@ -233,6 +233,11 @@ it('re-registering the same module yields no duplicate tools', async () => {
   expect(new Set(names).size).toBe(names.length)
 })
 ```
+
+The mock rejects duplicate names with the same `InvalidStateError` Chrome
+throws, so the test fails if the claim-before-register guard regresses.
+Also covered in `src/test/webmcp.integration.test.ts` (StrictMode remount case
+and `registerAllTools` after `registerTools('fir')`).
 
 ---
 

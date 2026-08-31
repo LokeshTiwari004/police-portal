@@ -10,7 +10,7 @@ Hackathon: **OpenAI WebMCP Challenge** (webmcp.devpost.com), deadline **Sep 3 20
 **Stage Two** — 4 **equally-weighted** judging criteria:
 | # | Criterion | What judges look for | Our evidence |
 |---|---|---|---|
-| 1 | **WebMCP Leverage** | Thorough/skillful use; genuine, non-trivial implementation | 12 registered tools (`fir.*`6, `challan.*`3, `dispatch.*`3), AbortController re-registration, shared store, schema-driven validation. Show `registerTool` + schemas in repo |
+| 1 | **WebMCP Leverage** | Thorough/skillful use; genuine, non-trivial implementation | 12 registered tools (`fir.*`6, `challan.*`3, `dispatch.*`3), idempotent registration (no unregister API — no dup errors), shared store, schema-driven validation. Show `registerTool` + schemas in repo |
 | 2 | **Execution** | Working/runnable, complete coherent product — not just tech PoC | Live URL, full form UI, inline errors, submit persists, challan+dispatch consuming same incident; test suite proves it runs |
 | 3 | **Potential Impact** | Credible specific case, real problem/real audience, solution actually addresses it | FIR Copilot: dual human+agent realtime form with validation parity — an officer + agent collaborate; supported by literature review |
 | 4 | **Creativity & Ambition** | Novel, differs from existing | Agent-native forms with conditional reveal + flag-for-human-review; cross-module incident lifecycle |
@@ -54,7 +54,7 @@ Mirror the ecosystem eval framework (PaulKinlan/`webmcp-relay` uses these exact 
 - **MRR** (mean reciprocal rank) — where the correct tool ranks
 - **success rate** — task completes
 - **latency** — per tool-call
-- cache miss / duplicate registration (our AbortController guarantee)
+- cache miss / duplicate registration (idempotency guarantee — zero "Duplicate tool name" errors)
 
 **Scenario set** (graded, deterministic, no LLM needed — assert tool plumbing):
 1. Discover: `registerTools('fir')` → all 6 present, no dupes

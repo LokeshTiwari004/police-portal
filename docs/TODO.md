@@ -121,7 +121,7 @@ Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a 
   - [ ] Test: cross-tab incident update round-trip
 
 ### Performance / UX
-- [ ] Metric: **Tab-switch tool re-registration latency** — measurable, no duplicate tools (AbortController)
+- [ ] Metric: **Tab-switch tool re-registration latency** — measurable, no duplicate tools (idempotent claim-before-register)
   - [ ] Test: register same module twice → single tool set (no dupes)
 - [ ] Metric: **No console errors** during full agent-driven session
 
