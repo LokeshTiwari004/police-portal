@@ -1,4 +1,4 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { incidentStore, type Incident } from '../lib/incidentStore'
 import { validateField } from '../lib/validation'
 import schemaJson from '../data/formSchema.json'
@@ -78,6 +78,16 @@ function fieldError(field: Field, incident: Incident): string | null {
 
 export default function FIRForm() {
   const [incident, setIncident] = useState<Incident>(() => incidentStore.list()[0] ?? incidentStore.create())
+
+  // Sync with the live active incident. WebMCP tools (fir.fill_field,
+  // fir.flag_missing, ...) mutate incidentStore directly; subscribing here
+  // makes the agent's edits appear in the form instead of being swallowed by
+  // this component's local state.
+  useEffect(() => {
+    return incidentStore.subscribe((incidents) => {
+      setIncident(incidents[0] ?? incidentStore.create())
+    })
+  }, [])
 
   const visibleSections = useMemo(
     () => sections.filter((s) => isSectionVisible(s, incident)),

@@ -1,9 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, act } from '@testing-library/react'
 import { validateForm } from '../lib/validation'
 import { incidentStore } from '../lib/incidentStore'
+import { registerTools } from '../lib/webmcpTools'
+import { mockModelContext, clearStore } from './modelContextMock'
 import FIRForm from '../components/FIRForm'
-import { clearStore } from './modelContextMock'
 
 /**
  * Validation parity test.
@@ -62,5 +63,24 @@ describe('validation parity: FIRForm UI vs fir.validate_form tool', () => {
     // The Narrative field no longer carries a required error in the UI.
     render(<FIRForm />)
     expect(screen.getByLabelText(/Narrative/).className).not.toMatch(/border-red-400/)
+  })
+
+  it('fir.fill_field drives the tool -> incidentStore -> form round trip', async () => {
+    const mc = mockModelContext()
+    await registerTools('fir')
+    const tools = Object.fromEntries(mc.registered.map((t) => [t.name, t]))
+
+    render(<FIRForm />)
+    const nameInput = screen.getByLabelText(/^Name\s*\*?$/)
+    expect(nameInput).toHaveValue('')
+
+    await act(async () => {
+      await tools['fir.fill_field'].execute({ field: 'complainant.name', value: 'Agent Alice' })
+    })
+    expect(screen.getByLabelText(/^Name\s*\*?$/)).toHaveValue('Agent Alice')
+
+    await tools['fir.submit'].execute({})
+    // Narrative still empty -> submission must be rejected, staying visible.
+    expect(screen.getAllByText(/This field is required\./).length).toBeGreaterThan(0)
   })
 })
