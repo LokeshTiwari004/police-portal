@@ -1,0 +1,205 @@
+[
+  {
+    "id": "inc-seed-000001",
+    "firNumber": "FIR-2024-000981",
+    "createdAt": "2024-11-04T10:24:00.000Z",
+    "status": "closed",
+    "complainant": {
+      "name": "Ravi Shukla",
+      "fatherName": "Mohan Shukla",
+      "address": "14 Station Road, MG Road, Lucknow",
+      "phone": "9876543210",
+      "email": "ravi.shukla@example.com"
+    },
+    "offense": {
+      "sections": ["379"],
+      "date": "2024-11-03",
+      "time": "18:45",
+      "place": "MG Road cycle stand",
+      "beat": "PS Hazratganj"
+    },
+    "accused": {
+      "name": "name unknown",
+      "description": "Male, approx 25, wearing dark hoodie",
+      "age": "25",
+      "sex": "Male"
+    },
+    "property": [
+      { "type": "movable", "description": "Hero Splendor motorcycle black, reg UP32CN1122", "value": 45000, "marking": "Scratch on right tank", "stolen": true, "recovered": false }
+    ],
+    "witnesses": [],
+    "narrative": "Bike was parked outside the station at 18:40. Complainant returned at 18:50 to find it missing. CCTV at the stand showed a man in a dark hoodie riding it away towards Hazratganj.",
+    "missingFields": [],
+    "statusNote": ""
+  },
+  {
+    "id": "inc-seed-000002",
+    "firNumber": "FIR-2024-001203",
+    "createdAt": "2024-12-19T14:05:00.000Z",
+    "status": "closed",
+    "complainant": {
+      "name": "Sunita Verma",
+      "fatherName": "Kailash Verma",
+      "address": "8 Civil Lines, Mall Avenue, Lucknow",
+      "phone": "9812233445",
+      "email": "sunita.verma@example.com"
+    },
+    "offense": {
+      "sections": ["379", "380"],
+      "date": "2024-12-18",
+      "time": "23:10",
+      "place": "Flat 3B, Green Residency, Civil Lines",
+      "beat": "PS Civil Lines"
+    },
+    "accused": {
+      "name": "name unknown",
+      "description": "Two persons, both slim, seen climbing the rear boundary wall",
+      "sex": "Male"
+    },
+    "property": [
+      { "type": "movable", "description": "Sony LED TV 55 inch", "value": 62000, "stolen": true },
+      { "type": "movable", "description": "Gold chain 22ct, approx 40g", "value": 240000, "marking": "Mangalsutra with pendant", "stolen": true },
+      { "type": "movable", "description": "Dell laptop", "value": 55000, "stolen": true }
+    ],
+    "witnesses": [
+      { "name": "Anil Kumar", "address": "Flat 3C, Green Residency", "phone": "9011223344" }
+    ],
+    "narrative": "House burglary while residents were away for the evening. Rear balcony door lock was forced. Neighbour reported seeing two persons scaling the boundary wall around 23:00.",
+    "missingFields": [],
+    "statusNote": ""
+  },
+  {
+    "id": "inc-seed-000003",
+    "firNumber": "FIR-2025-000044",
+    "createdAt": "2025-01-15T09:50:00.000Z",
+    "status": "closed",
+    "complainant": {
+      "name": "Gaurav Mehta",
+      "fatherName": "Ashok Mehta",
+      "address": "21 Sector 15, Gomti Nagar, Lucknow",
+      "phone": "9899001122",
+      "email": "gaurav.mehta@example.com"
+    },
+    "offense": {
+      "sections": ["420"],
+      "date": "2025-01-10",
+      "time": "12:30",
+      "place": "Online - classifieds portal",
+      "beat": "Cyber Cell, Gomti Nagar"
+    },
+    "accused": {
+      "name": "unknown online seller",
+      "description": "Account 'premiumgadgets' on classifieds",
+      "sex": "Other"
+    },
+    "property": [
+      { "type": "movable", "description": "iPhone 15 Pro (paid advance, never delivered)", "value": 89000, "stolen": false }
+    ],
+    "witnesses": [],
+    "narrative": "Complainant paid an advance of INR 89,000 via UPI for an iPhone listed on a classifieds portal. After payment the seller went unreachable and the listing was removed. Evidence including payment screenshots and seller account details submitted.",
+    "missingFields": [],
+    "statusNote": "Cyber cell investigation ongoing"
+  },
+  {
+    "id": "inc-seed-000004",
+    "firNumber": "FIR-2025-000258",
+    "createdAt": "2025-03-02T16:20:00.000Z",
+    "status": "dispatched",
+    "complainant": {
+      "name": "Priya Nair",
+      "fatherName": "Rajesh Nair",
+      "address": "5 Alambagh Lane, Lucknow",
+      "phone": "9765432109",
+      "email": "priya.nair@example.com"
+    },
+    "offense": {
+      "sections": ["323", "354"],
+      "date": "2025-03-02",
+      "time": "15:55",
+      "place": "Market road near Alambagh",
+      "beat": "PS Alambagh"
+    },
+    "accused": {
+      "name": "name unknown",
+      "description": "Male in his thirties, unkempt, seen loitering near the bus stop",
+      "age": "30",
+      "sex": "Male"
+    },
+    "property": [],
+    "witnesses": [
+      { "name": "Meena Devi", "address": "12 Alambagh Lane", "phone": "9988776655" }
+    ],
+    "narrative": "Complainant was followed and verbally abused while returning from the market. The accused pushed her causing a fall. A passer-by intervened and the accused fled towards the bus stand.",
+    "missingFields": [],
+    "statusNote": "",
+    "dispatch": {
+      "channel": "Voice",
+      "natureCode": "POL-007",
+      "priority": "urgent",
+      "location": { "lat": 26.7922, "lng": 80.901, "label": "Alambagh market" },
+      "unit": { "id": "PCR-88", "type": "Patrol", "etaMinutes": 2 }
+    }
+  },
+  {
+    "id": "inc-seed-000005",
+    "firNumber": "FIR-2025-000311",
+    "createdAt": "2025-04-21T11:40:00.000Z",
+    "status": "closed",
+    "complainant": {
+      "name": "Ramesh Patel",
+      "fatherName": "Bharat Patel",
+      "address": "Nyay Marg, Hazratganj, Lucknow",
+      "phone": "9654321870",
+      "email": "rameshr.patel@example.com"
+    },
+    "offense": {
+      "sections": ["457"],
+      "date": "2025-04-20",
+      "time": "02:15",
+      "place": "Nyay Marg residence",
+      "beat": "PS Hazratganj"
+    },
+    "accused": {
+      "name": "name unknown",
+      "description": "House-trespass at night, fled on a scooter when challenged"
+    },
+    "property": [
+      { "type": "movable", "description": "Nothing stolen; intruder fled", "value": 0, "stolen": false }
+    ],
+    "witnesses": [],
+    "narrative": "Intruder scaled the boundary wall and entered the courtyard at night. Householder woke and shouted; the intruder fled on a scooter. No property was taken but the complainant sought action for house-trespass.",
+    "missingFields": [],
+    "statusNote": "No property loss, charge-sheet prepared"
+  },
+  {
+    "id": "inc-seed-000006",
+    "firNumber": "FIR-2025-000402",
+    "createdAt": "2025-06-09T13:05:00.000Z",
+    "status": "acknowledged",
+    "complainant": {
+      "name": "Aisha Khan",
+      "fatherName": "Imran Khan",
+      "address": "9 LDA Colony, Kanpur Road, Lucknow",
+      "phone": "9876654321",
+      "email": "aisha.khan@example.com"
+    },
+    "offense": {
+      "sections": ["66D", "420"],
+      "date": "2025-06-08",
+      "time": "20:00",
+      "place": "Online - carding / personation",
+      "beat": "Cyber Cell"
+    },
+    "accused": {
+      "name": "unknown",
+      "description": "Fraudulent SIM swap + UPI payment fraud"
+    },
+    "property": [
+      { "type": "movable", "description": "Fraudulent UPI debits (5 transactions)", "value": 78000, "stolen": false }
+    ],
+    "witnesses": [],
+    "narrative": "Complainant received OTPs she did not request, then multiple UPI debits totalling INR 78,000. The fraudster impersonated the complainant on a call to the bank using a SIM-swap. Bank statements and transaction IDs submitted.",
+    "missingFields": [],
+    "statusNote": "Bank notified, tracing initiated"
+  }
+]

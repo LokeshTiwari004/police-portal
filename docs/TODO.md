@@ -30,7 +30,7 @@
 ### Phase 1: Mock Data & Schema
 - [x] Generate `data/formSchema.json` — conditional logic for FIR form (6 sections, 15+ fields)
 - [x] Generate `data/offenseCodes.json` — sample IPC/IT/MVA sections (10 entries)
-- [ ] Generate `data/mockIncidents.json` — seed incident records for `fir.find_similar_cases`
+- [x] Generate `data/mockIncidents.json` — seed incident records for `fir.find_similar_cases` (6 NCRB-style cases; tool now reads the archive from this file)
 - [x] `lib/incidentStore.ts` — shared store (`create`, `update`, `get`, `list`, localStorage-backed) + Incident type
 
 ### Phase 2: Validation Logic

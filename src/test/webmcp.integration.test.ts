@@ -123,4 +123,23 @@ describe('fir.* tools integrate with incidentStore', () => {
     expect(submit.ok).toBe(false)
     expect(submit.errors).toBeTruthy()
   })
+
+  it('find_similar_cases reads prior cases from the mockIncidents seed archive', async () => {
+    const mc = mockModelContext()
+    await registerTools('fir')
+    const tool = mc.registered.find((t) => t.name === 'fir.find_similar_cases')!
+
+    const out = JSON.parse((await tool.execute({ sections: ['379'] })) as string)
+    expect(out.count).toBeGreaterThan(0)
+    for (const m of out.matches) {
+      expect(m.sections).toContain('379')
+      expect(m.firNumber).toMatch(/^FIR-\d{4}-\d{6}$/)
+      expect(typeof m.location).toBe('string')
+    }
+
+    // Location narrowing behaves: asking for the place in one seed case filters others.
+    const narrowed = JSON.parse((await tool.execute({ sections: ['379'], location: 'MG Road' })) as string)
+    expect(narrowed.count).toBeGreaterThan(0)
+    expect(narrowed.matches.every((m: { location: string }) => /mg road/i.test(m.location))).toBe(true)
+  })
 })

@@ -2,6 +2,7 @@ import { incidentStore, type Incident } from './incidentStore'
 import { validateForm, requiredFieldsForSections } from './validation'
 import { telemetry } from './telemetry'
 import schemaJson from '../data/formSchema.json'
+import mockIncidents from '../data/mockIncidents.json'
 
 interface SchemaField {
   name: string
@@ -293,16 +294,16 @@ function getFirTools(): ToolDefinition[] {
         required: ['sections'],
       },
       execute: async ({ sections, location }) => {
-        // Mock archive — in a real deployment this would hit CCTNS analytics.
-        const archive = [
-          { firNumber: 'FIR-2024-000981', sections: ['379'], location: 'MG Road', status: 'charge-sheeted' },
-          { firNumber: 'FIR-2024-001203', sections: ['379', '380'], location: 'Civil Lines', status: 'investigating' },
-          { firNumber: 'FIR-2025-000044', sections: ['420'], location: 'Sector 15', status: 'pending' },
-        ]
         const wanted = new Set(sections as string[])
-        const matches = archive.filter(
-          (a) => a.sections.some((s) => wanted.has(s)) && (!location || a.location.includes(location as string)),
-        )
+        const matches = (mockIncidents as Incident[])
+          .filter((a) => a.offense.sections.some((s) => wanted.has(s)))
+          .filter((a) => !location || a.offense.place?.toLowerCase().includes(String(location).toLowerCase()))
+          .map((a) => ({
+            firNumber: a.firNumber,
+            sections: a.offense.sections,
+            location: a.offense.place,
+            status: a.status,
+          }))
         return JSON.stringify({ count: matches.length, matches })
       },
       annotations: { readOnlyHint: true },
