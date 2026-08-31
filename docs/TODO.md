@@ -143,6 +143,39 @@ Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a 
 - [ ] Push to GitHub (public repo with LICENSE)
 - [ ] Update README with setup + tool list + live URL
 
+## 🤖 External-agent bridge (note: OPTIONAL — not required for hackathon submission)
+
+A WebMCP tool is callable only by an agent that lives in the same document
+(extension / in-app browser / inspector). Built-in Gemini auto-browse does NOT
+call WebMCP tools. To let an *external* AI (Gemini API, Claude, OpenAI) drive
+them, expose the page's tools over server-side MCP. This proves tool execution
+from a second agent surface and is strong WebMCP-leverage footage, but the
+extension path already demonstrates this — so treat as stretch:
+
+- [ ] Install an MCP bridge that turns WebMCP `document.modelContext` tools into
+      a server-side MCP endpoint. Options: **WebMCP Bridge** Chrome extension
+      (Web Store "WebMCP Bridge", exposes web-app tools to Claude/VS Code),
+      `@mcp-b/webmcp-polyfill`, or `browser-mcp`.
+- [ ] Point an MCP client (Claude Desktop / VS Code) at the bridge server.
+- [ ] Verify tool discovery (`tools/list`) returns the 12 registered tools.
+- [ ] Verify `tools/call` on `fir.fill_field` mutates the same incidentStore UI
+      shows (they share the page session).
+- [ ] Add a short bridge-demo segment to the video IF it stabilizes quickly.
+
+## 🧹 Tool-context quality (WebMCP Leverage polish)
+
+Improve how an agent perceives the tools — scope is modest and self-contained
+in `src/lib/webmcpTools.ts`:
+
+- [ ] Consider adding a `title` to each tool (Chrome shows it as the browser
+      UI label; the docs list `title` as a `ModelContextTool` field).
+- [ ] Review each `description` for agent-actionability (see this session's
+      assessment below) — short, outcome-oriented, "given X do Y".
+- [ ] Cross-reference the schema `description`s with `formSchema.json` labels
+      so agents map human field names <-> dotted paths.
+- [ ] Keep total `description` concise (< 128 char target where sensible) so
+      discovery payloads stay small.
+
 ---
 
 ## 🧭 Notes / Decisions
