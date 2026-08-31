@@ -108,16 +108,16 @@ In-memory store with functions:
    ```css
    @import "tailwindcss";
    ```
-4. Update `vite.config.js` for WebMCP (origin isolation header):
+4. Do NOT set an `Origin-Agent-Cluster` header. WebMCP requires an origin-keyed
+   agent cluster; sending `Origin-Agent-Cluster: ?0` opts out of origin-keying
+   (enables `document.domain`) and throws
+   `SecurityError: document.modelContext cannot be used when document.domain is enabled`.
+   The browser default (no header) keeps the document origin-keyed:
    ```js
    import { defineConfig } from 'vite'
    export default defineConfig({
-     server: {
-       headers: {
-         'Origin-Agent-Cluster': '?0' // enable origin isolation for localhost dev
-       }
-       // Note: full WebMCP support on localhost requires Chrome flag
-     }
+     // No Origin-Agent-Cluster header — origin-keying is the default. Full
+     // WebMCP on localhost also requires the Chrome flag.
    })
    ```
 5. Define static mock data (`formSchema.json`, `offenseCodes.json`)

@@ -36,7 +36,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - No test framework was configured here until Vitest was added — do not revert to a manual/no-test workflow.
 
 ## WebMCP gotchas
-- Full WebMCP on localhost requires Chrome flag `chrome://flags/#enable-webmcp-testing`. `Origin-Agent-Cluster: ?0` header is set in `vite.config.ts` for dev origin isolation; production needs HTTPS (Vercel).
+- Full WebMCP on localhost requires Chrome flag `chrome://flags/#enable-webmcp-testing`. WebMCP needs an **origin-keyed** agent cluster, so we must NOT send `Origin-Agent-Cluster: ?0` — that header opts out of origin-keying (enables `document.domain`) and throws `SecurityError: document.modelContext cannot be used when document.domain is enabled`. `vite.config.ts` therefore sets no such header; production needs HTTPS (Vercel). See the `?0`-removal fix history for the regression this caused.
 - Tool `execute` returns string-ifiable values; inputSchema must be JSON-serializable and the browser stringifies results for the agent.
 - `crypto.randomUUID()` (incidentStore) needs a secure context — localhost is fine.
 

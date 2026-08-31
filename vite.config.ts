@@ -5,14 +5,10 @@ import { defineConfig } from 'vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  server: {
-    headers: {
-      // Origin isolation: WebMCP requires an origin-keyed agent cluster.
-      // Set to ?0 so same-origin contexts can register tools during local dev,
-      // mirroring what the deployed (HTTPS) origin will do. Note: full WebMCP
-      // functionality on localhost still requires the Chrome
-      // chrome://flags/#enable-webmcp-testing flag.
-      'Origin-Agent-Cluster': '?0',
-    },
-  },
+  // NOTE on WebMCP: the document must be origin-keyed for `document.modelContext`
+  // to be available. We deliberately do NOT send `Origin-Agent-Cluster: ?0`,
+  // because that header opts OUT of origin-keying (enables document.domain)
+  // and therefore DISABLES WebMCP. The browser default keeps the document
+  // origin-keyed. On localhost also enable chrome://flags/#enable-webmcp-testing;
+  // prod HTTPS needs no flag.
 })

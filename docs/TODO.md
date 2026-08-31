@@ -14,14 +14,14 @@
   # @import "tailwindcss"; added to src/index.css
   ```
 - [x] Plugin wired in `vite.config.ts` (`plugins: [react(), tailwindcss()]`)
-- [x] Add `Origin-Agent-Cluster: ?0` header in `vite.config.ts` for local dev origin isolation (WebMCP requirement)
+- [x] Removed the `Origin-Agent-Cluster: ?0` header — it OPTS OUT of origin-keying and DISABLES WebMCP (`document.domain` SecurityError). Correct config: no header (see `vite.config.ts`).
 - [x] Verified `npm run build` + `npm run dev` (http://localhost:5173)
 
 ### Vercel Deployment
 - [ ] Create `vercel.json` (or rely on zero-config) — ensure `build` = `npm run build`, output = `dist`
 - [ ] Add `vercel` project via `npx vercel` → link repo `police-portal`
 - [ ] Production URL: `https://police-portal.vercel.app` (or name from CLI)
-- [ ] Confirm `Origin-Agent-Cluster` + HTTPS on prod (WebMCP origin isolation)
+- [ ] Confirm HTTPS on prod (Vercel) — WebMCP needs a secure, origin-keyed document; do NOT send `Origin-Agent-Cluster: ?0`
 - [ ] Enable `chrome://flags/#enable-webmcp-testing` on Vercel URL → verify `fir/*` tools live
 - [ ] Add a manual QA page / smoke test verifying `getTools()` + `executeTool` on prod
 
@@ -150,4 +150,4 @@ Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a 
 - **Shared model**: Design `incidentStore.js` incident schema first — reused by all modules
 - **Tool namespacing**: Use `/` separators (`fir/fill_field`, `challan/lookup_rc`) for clarity in agent tool-discovery
 - **Dynamic registration**: Register `fir/*` tools on tab switch — keeps tool list clean
-- **Origin isolation**: WebMCP requires secure context + origin isolation. Use Chrome flag for localhost dev; Vercel handles prod HTTPS.
+- **Origin isolation**: WebMCP requires a secure, **origin-keyed** document. Do NOT send `Origin-Agent-Cluster: ?0` (it opts out of origin-keying and disables WebMCP). Use the Chrome flag for localhost dev; Vercel handles prod HTTPS.
