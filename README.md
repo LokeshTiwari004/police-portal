@@ -1,93 +1,89 @@
 # Digital Police Portal — WebMCP
 
-WebMCP-enabled FIR Copilot for Indian police officers. AI agents collaborate with
-officers in the **same live form** — an agent fills fields, reveals conditional
-sections, flags gaps for human review, and validates before submission, while a
-human officer stays in control over each action.
+WebMCP-enabled FIR copilot for Indian police. An in-browser agent and an officer
+work on the **same live form**: the agent fills fields, reveals conditional
+sections, flags gaps, and validates before submit; the officer keeps control.
 
-Built for the **OpenAI WebMCP Challenge** (Sep 2026): an app that becomes
-meaningfully better when humans and their agents use it together.
+Built for the **OpenAI WebMCP Challenge** (Sep 2026).
 
-## Why this is a strong WebMCP fit
+## Why WebMCP
 
-FIR filing (CCTNS F13) is high-stakes, schema-driven paperwork. Without WebMCP an
-agent can only fumble through the DOM. With WebMCP, tools expose the exact field
-structure and validation rules:
+FIR filing (CCTNS F13) is schema-driven, high-stakes paperwork. WebMCP tools
+expose the exact field structure and validation rules instead of the agent
+fumbling through the DOM.
 
-- **Shared validation** — the agent's `validate_form` uses the *same* logic as
-  the on-screen form, so the agent's view never drifts from what the officer must
-  fill (guarded by a parity test).
-- **Conditional reveal** — when the agent sets an offence section (e.g. `379`
-  theft), the property section appears and becomes required, in real time.
-- **Human-in-the-loop** — `fir.flag_missing` surfaces ambiguous fields for an
-  officer to review rather than the agent guessing.
-- **Cross-module state** — one incident record flows FIR → e-Challan →
-  ERSS-112 dispatch through a shared store.
+- **Shared validation** — the agent's `fir.validate_form` runs the same logic as
+  the on-screen form (parity test pins this), so the agent's view never drifts.
+- **Conditional reveal** — setting offence section `379` reveals the property
+  section and makes it required, live.
+- **Human-in-the-loop** — `fir.flag_missing` surfaces ambiguous fields for the
+  officer instead of the agent guessing.
+- **Shared state** — one incident record flows FIR → e-Challan → dispatch.
 
 ## Modules
 
-| Module | Workspace | Tools |
-|---|---|---|
-| **FIR Copilot** (Must-Have) | Schema-driven dynamic form, inline validation, missing-field summary | `fir.identify_required_fields`, `fir.fill_field`, `fir.flag_missing`, `fir.validate_form`, `fir.submit`, `fir.find_similar_cases` |
-| **e-Challan** (Should-Have) | RC lookup + MVA fine auto-calc, linked to incident | `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.submit` |
-| **ERSS-112 Dispatch** (Stretch) | Incident queue, nature classification, unit assignment | `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit` |
-| **Metrics** (Eval) | Live scorecard of tool latency, call volume, registration time | — |
+| Module | Tools |
+|---|---|
+| **FIR Copilot** | `fir.identify_required_fields`, `fir.fill_field`, `fir.flag_missing`, `fir.validate_form`, `fir.submit`, `fir.find_similar_cases` |
+| **e-Challan** | `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.submit` |
+| **Dispatch (ERSS-112)** | `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit` |
+| **Metrics** | live call counts, per-tool latency, registration time |
 
-## Setup
+## Run
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
 ```
 
-## Testing WebMCP in the browser
+## Demo WebMCP in the browser
 
-1. Open the live URL (or localhost) in **Google Chrome 149+**.
-2. Enable the flag: `chrome://flags/#enable-webmcp-testing` → Relaunch.
-3. Or use the **ChatGPT desktop app** in-app browser (WebMCP on by default).
-4. Verify registration: DevTools → **Application → WebMCP** shows the 12
-   tools under "Available Tools".
-5. **Drive tools with a real agent**: install the [Model Context Tool
-   Inspector](https://chromewebstore.google.com/detail/model-context-tool-inspec/gbpdfapgefenggkahomfgkhfehlcenpd)
-   extension and use natural language (it sends to `gemini-3-flash-preview`).
-   It discovers and invokes WebMCP tools — watch the Metrics tab count calls.
-6. Or call a tool directly from the DevTools console:
+1. Open the live URL (or localhost) in **Chrome 149+** (or the ChatGPT desktop
+   in-app browser).
+2. `chrome://flags/#enable-webmcp-testing` → Relaunch.
+3. DevTools → **Application → WebMCP** — the 12 tools appear under
+   "Available Tools".
+4. Drive them with a real agent: install the
+   [Model Context Tool Inspector](https://chromewebstore.google.com/detail/model-context-tool-inspec/gbpdfapgefenggkahomfgkhfehlcenpd)
+   extension and prompt it in natural language (sends to
+   `gemini-3-flash-preview`). It discovers and calls the tools — the Metrics tab
+   counts the calls.
+5. Or call a tool from the console:
 
 ```js
 const tools = await document.modelContext.getTools();
-// Chrome 151: pass input as a JSON *string* (spec's object form not shipped yet —
-// webmachinelearning/webmcp#243). Unwrap the result envelope: { content: [{ type, text }] }.
-await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), JSON.stringify({ field: 'complainant.name', value: 'Alice' }));
+// Chrome 151: pass input as a JSON *string* (object form not shipped yet —
+// webmachinelearning/webmcp#243). Result is { content: [{ type, text }] }.
+await document.modelContext.executeTool(
+  tools.find(t => t.name === 'fir.fill_field'),
+  JSON.stringify({ field: 'complainant.name', value: 'Alice' })
+);
 ```
 
-> **Note:** Chrome's built-in **Gemini auto-browse** does NOT call WebMCP tools —
-> it actuates the DOM directly and is architecturally separate from WebMCP
-> (confirmed by the Chrome docs). To demo an agent *using your tools*, use the
-> Tool Inspector extension or the ChatGPT in-app browser; don't expect built-in
-> Gemini to invoke them.
+> Built-in **Gemini auto-browse does not call WebMCP tools** — it drives the DOM
+> and is separate from WebMCP. To demo an agent using your tools, use the Tool
+> Inspector extension or the ChatGPT in-app browser.
 
-Tools are registered via `document.modelContext.registerTool({...})`
-(`src/lib/webmcpTools.ts`). WebMCP has no unregister API, so registration is
-**idempotent** — each name is registered at most once per page load and calls
-(per-tab on mount, React StrictMode remounts) never re-register or error.
+Registration via `document.modelContext.registerTool` (`src/lib/webmcpTools.ts`)
+is **idempotent**: WebMCP has no unregister API, so each name is registered at
+most once per page load; tab switches and StrictMode remounts never error.
 
 ## Commands
 
 | Command | Purpose |
 |---|---|
 | `npm run dev` | Vite dev server |
-| `npm run build` | Type-check (`tsc -b`) + production build |
+| `npm run build` | Type-check (`tsc -b`) + build |
 | `npm run lint` | Oxlint |
 | `npm test` | Vitest suite (unit, component, integration, system, parity) |
-| `npm run test:watch` / `test:coverage` | Watch / coverage |
 
-## Testing & Evaluation
+## Docs
 
-- `docs/TESTING.md` — runbook for each system-test metric.
-- `docs/EVAL.md` — research-backed evaluation plan mapped to the hackathon rubric.
-- `docs/TODO.md` — live build checklist.
+- `docs/TESTING.md` — system-test runbook.
+- `docs/EVAL.md` — evaluation mapped to the hackathon rubric.
+- `docs/TODO.md` — build checklist.
 
-## Tech Stack
+## Stack
 
 React 19 · Vite · TypeScript · Tailwind v4 · Zustand · Vitest · Oxlint
 
