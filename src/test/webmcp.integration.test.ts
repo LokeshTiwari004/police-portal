@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { incidentStore } from '../lib/incidentStore'
 import { registerTools } from '../lib/webmcpTools'
+import { mockModelContext, clearStore } from './modelContextMock'
 
 /**
  * Integration test: exercises the shared incident store as the "backend"
@@ -8,24 +9,7 @@ import { registerTools } from '../lib/webmcpTools'
  * with document.modelContext mocked to intercept tool registration.
  */
 
-function mockModelContext() {
-  const registered: Array<{ name: string; execute: (input: unknown, o?: { signal?: AbortSignal }) => unknown }> = []
-  const mc = {
-    registered,
-    async registerTool(tool: unknown) {
-      registered.push(tool as (typeof registered)[number])
-    },
-    async getTools() {
-      return registered
-    },
-  }
-  ;(document as unknown as { modelContext?: typeof mc }).modelContext = mc
-  return mc
-}
-
-beforeEach(() => {
-  localStorage.removeItem('police-portal:incidents')
-})
+beforeEach(clearStore)
 
 describe('fir/* tools integrate with incidentStore', () => {
   it('registers fir tools on a module switch', async () => {
