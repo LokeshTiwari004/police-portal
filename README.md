@@ -49,7 +49,9 @@ npm run dev        # http://localhost:5173
 
 ```js
 const tools = await document.modelContext.getTools();
-await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), { field: 'complainant.name', value: 'Alice' });
+// Chrome 151: pass input as a JSON *string* (spec's object form not shipped yet —
+// webmachinelearning/webmcp#243). Unwrap the result envelope: { content: [{ type, text }] }.
+await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), JSON.stringify({ field: 'complainant.name', value: 'Alice' }));
 ```
 
 Tools are registered via `document.modelContext.registerTool({...})`

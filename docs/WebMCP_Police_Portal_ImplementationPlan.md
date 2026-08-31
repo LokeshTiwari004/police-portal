@@ -242,6 +242,7 @@ Use [Model Context Tool Inspector Extension](https://chrome.google.com/webstore/
 ```js
 const tools = await document.modelContext.getTools();
 await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), {field: 'complaint_text', value: 'Stolen bike'});
+// Note: Chrome 151 requires the input as a JSON *string* (JSON.stringify) — see README.
 ```
 
 ---
