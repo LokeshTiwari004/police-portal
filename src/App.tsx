@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
-import { registerTools } from './lib/webmcpTools'
+import { registerTools, registerAllTools } from './lib/webmcpTools'
 import FIRForm from './components/FIRForm'
+import ChallanGenerator from './components/ChallanGenerator'
+import DispatchConsole from './components/DispatchConsole'
+import MetricsPanel from './components/MetricsPanel'
 
-type Tab = 'fir' | 'challan' | 'dispatch'
+type Tab = 'fir' | 'challan' | 'dispatch' | 'metrics'
 
 const TABS: { id: Tab; label: string; blurb: string }[] = [
   { id: 'fir', label: 'FIR', blurb: 'File a First Information Report (CCTNS F13)' },
   { id: 'challan', label: 'e-Challan', blurb: 'Generate traffic challans' },
   { id: 'dispatch', label: 'ERSS-112', blurb: 'Emergency dispatch console' },
+  { id: 'metrics', label: 'Metrics', blurb: 'Live WebMCP tool telemetry & evaluation scorecard' },
 ]
 
 export default function App() {
@@ -16,7 +20,8 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
-    registerTools(tab).then(async () => {
+    const reg = tab === 'metrics' ? registerAllTools() : registerTools(tab as 'fir' | 'challan' | 'dispatch')
+    reg.then(async () => {
       if (cancelled) return
       try {
         const mc = (document as unknown as { modelContext?: any }).modelContext
@@ -68,12 +73,9 @@ export default function App() {
           <p className="text-slate-500 text-sm mb-6">{TABS.find((t) => t.id === tab)?.blurb}</p>
 
           {tab === 'fir' && <FIRForm />}
-          {tab === 'challan' && (
-            <p className="text-slate-600">e-Challan module — scaffolded in the Should-Have phase.</p>
-          )}
-          {tab === 'dispatch' && (
-            <p className="text-slate-600">ERSS-112 dispatch console — stretch goal, not yet built.</p>
-          )}
+          {tab === 'challan' && <ChallanGenerator />}
+          {tab === 'dispatch' && <DispatchConsole />}
+          {tab === 'metrics' && <MetricsPanel />}
         </div>
       </main>
     </div>

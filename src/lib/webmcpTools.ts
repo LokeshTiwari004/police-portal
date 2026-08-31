@@ -1,5 +1,6 @@
 import { incidentStore, type Incident } from './incidentStore'
 import { validateForm, requiredFieldsForSections } from './validation'
+import { telemetry } from './telemetry'
 
 /**
  * WebMCP tool registry.
@@ -38,13 +39,62 @@ export async function registerTools(module: 'fir' | 'challan' | 'dispatch') {
   currentAbortController = new AbortController()
 
   const tools = getToolsForModule(module)
+  telemetry.beginRegistration(tools.length)
   for (const tool of tools) {
     try {
-      await mc.registerTool(tool, { signal: currentAbortController.signal })
+      const timed: ToolDefinition = {
+        ...tool,
+        execute: async (input, opts) => {
+          const start = performance.now()
+          try {
+            return await tool.execute(input, opts)
+          } catch (err) {
+            telemetry.recordTool(tool.name, performance.now() - start, String(err))
+            throw err
+          } finally {
+            telemetry.recordTool(tool.name, performance.now() - start)
+          }
+        },
+      }
+      await mc.registerTool(timed, { signal: currentAbortController.signal })
     } catch (err) {
       console.warn(`[webmcp] failed to register ${tool.name}`, err)
     }
   }
+  telemetry.endRegistration()
+}
+
+/** Register every module's tools on a single shared AbortController (used by the metrics tab). */
+export async function registerAllTools() {
+  const mc = (document as unknown as { modelContext?: any }).modelContext
+  if (!mc || typeof mc.registerTool !== 'function') return
+  if (currentAbortController) currentAbortController.abort()
+  currentAbortController = new AbortController()
+
+  const tools = ['fir', 'challan', 'dispatch'].flatMap((m) => getToolsForModule(m as 'fir' | 'challan' | 'dispatch'))
+  telemetry.beginRegistration(tools.length)
+  for (const tool of tools) {
+    try {
+      const timed: ToolDefinition = {
+        ...tool,
+        execute: async (input, opts) => {
+          const start = performance.now()
+          try {
+            return await tool.execute(input, opts)
+          } catch (err) {
+            telemetry.recordTool(tool.name, performance.now() - start, String(err))
+            throw err
+          } finally {
+            telemetry.recordTool(tool.name, performance.now() - start)
+          }
+        },
+      }
+      await mc.registerTool(timed, { signal: currentAbortController.signal })
+    } catch (err) {
+      console.warn(`[webmcp] failed to register ${tool.name}`, err)
+    }
+  }
+  telemetry.endRegistration()
 }
 
 function getToolsForModule(module: 'fir' | 'challan' | 'dispatch'): ToolDefinition[] {

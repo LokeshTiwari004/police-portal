@@ -25,15 +25,18 @@ describe('App shell', () => {
     expect(screen.getByText(/WebMCP tools pending/i)).toBeInTheDocument()
   })
 
-  it('switches between FIR, e-Challan, and ERSS-112 tabs', () => {
+  it('switches between FIR, e-Challan, ERSS-112, and Metrics tabs', () => {
     render(<App />)
 
     fireEvent.click(screen.getByRole('button', { name: 'e-Challan' }))
-    expect(screen.getByText(/Challan module — scaffolded/i)).toBeInTheDocument()
+    expect(screen.getByText(/1 · Look up vehicle/i)).toBeInTheDocument()
     expect(screen.queryByText(/Complainant Details/)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'ERSS-112' }))
-    expect(screen.getByText(/ERSS-112 dispatch console — stretch goal/i)).toBeInTheDocument()
+    expect(screen.getByText(/PCR-88/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Metrics' }))
+    expect(screen.getByText(/WebMCP tool telemetry/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'FIR' }))
     expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
