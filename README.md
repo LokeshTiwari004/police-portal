@@ -45,7 +45,13 @@ npm run dev        # http://localhost:5173
 1. Open the live URL (or localhost) in **Google Chrome 149+**.
 2. Enable the flag: `chrome://flags/#enable-webmcp-testing` → Relaunch.
 3. Or use the **ChatGPT desktop app** in-app browser (WebMCP on by default).
-4. In DevTools console:
+4. Verify registration: DevTools → **Application → WebMCP** shows the 12
+   tools under "Available Tools".
+5. **Drive tools with a real agent**: install the [Model Context Tool
+   Inspector](https://chromewebstore.google.com/detail/model-context-tool-inspec/gbpdfapgefenggkahomfgkhfehlcenpd)
+   extension and use natural language (it sends to `gemini-3-flash-preview`).
+   It discovers and invokes WebMCP tools — watch the Metrics tab count calls.
+6. Or call a tool directly from the DevTools console:
 
 ```js
 const tools = await document.modelContext.getTools();
@@ -53,6 +59,12 @@ const tools = await document.modelContext.getTools();
 // webmachinelearning/webmcp#243). Unwrap the result envelope: { content: [{ type, text }] }.
 await document.modelContext.executeTool(tools.find(t => t.name === 'fir.fill_field'), JSON.stringify({ field: 'complainant.name', value: 'Alice' }));
 ```
+
+> **Note:** Chrome's built-in **Gemini auto-browse** does NOT call WebMCP tools —
+> it actuates the DOM directly and is architecturally separate from WebMCP
+> (confirmed by the Chrome docs). To demo an agent *using your tools*, use the
+> Tool Inspector extension or the ChatGPT in-app browser; don't expect built-in
+> Gemini to invoke them.
 
 Tools are registered via `document.modelContext.registerTool({...})`
 (`src/lib/webmcpTools.ts`). WebMCP has no unregister API, so registration is

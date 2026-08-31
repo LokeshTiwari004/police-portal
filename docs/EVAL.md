@@ -77,9 +77,9 @@ Per metric: target / actual / evidence → recorded in this doc's status table (
 
 | Metric | Target | Actual | Evidence |
 |---|---|---|---|
-| Tool discovery (6/3/3) | all present | — | vitest |
-| No duplicate tools | 0 dupes | — | vitest |
-| E2E fill→validate→submit | 1 pass ≤60s | — | vitest + video |
+| Tool discovery (6/3/3) | all present | 12 shown under DevTools→Application→WebMCP | vitest + DevTools |
+| No duplicate tools | 0 dupes | 0 | vitest |
+| E2E fill→validate→submit | 1 pass ≤60s | observed: extension agent drove 12 tool calls (Metrics tab counts) | vitest + extension |
 | Validation parity | 100% | 2 cases green (`src/test/parity.test.tsx`) | parity corpus |
 | Cross-module same record | id/firNumber stable | — | vitest |
 | LCP / INP / CLS | ≤1.5s / ≤120ms / ≤0.05 | — | Lighthouse |
