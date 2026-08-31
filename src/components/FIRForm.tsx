@@ -113,19 +113,28 @@ export default function FIRForm() {
     setIncident(updated)
   }
 
-  function renderField(field: Field): ReactNode {
+  function renderField(field: Field, sectionId: string): ReactNode {
     const value = getValue(incident, field.name)
     const err = errors[field.name]
     const inputClass =
       'w-full px-3 py-2 border rounded-md text-sm ' +
       (err ? 'border-red-400 bg-red-50' : 'border-slate-300')
+    // Scope the DOM id by section so a field name used in more than one section
+    // (e.g. "property" in both Cyber and Property sections) never collides.
+    const controlId = `${sectionId}.${field.name}`
 
-    const label = (
-      <label htmlFor={field.name} className="block text-sm font-medium text-slate-700 mb-1">
-        {field.label}
-        {isFieldRequired(field, incident) && <span className="text-red-500"> *</span>}
-      </label>
-    )
+    const label =
+      field.type === 'multiselect' || field.type === 'repeat' ? (
+        <span className="block text-sm font-medium text-slate-700 mb-1">
+          {field.label}
+          {isFieldRequired(field, incident) && <span className="text-red-500"> *</span>}
+        </span>
+      ) : (
+        <label htmlFor={controlId} className="block text-sm font-medium text-slate-700 mb-1">
+          {field.label}
+          {isFieldRequired(field, incident) && <span className="text-red-500"> *</span>}
+        </label>
+      )
     const errorMsg = err && <p className="text-xs text-red-600 mt-1">{err}</p>
 
     switch (field.type as FieldType) {
@@ -134,7 +143,7 @@ export default function FIRForm() {
           <div key={field.name}>
             {label}
             <textarea
-              id={field.name}
+              id={controlId}
               className={inputClass}
               rows={3}
               value={String(value ?? '')}
@@ -149,7 +158,7 @@ export default function FIRForm() {
           <div key={field.name}>
             {label}
             <select
-              id={field.name}
+              id={controlId}
               className={inputClass}
               value={String(value ?? '')}
               onChange={(e) => handleChange(field, e.target.value)}
@@ -182,6 +191,7 @@ export default function FIRForm() {
                   <button
                     type="button"
                     key={o.value}
+                    aria-pressed={active}
                     onClick={() => toggle(o.value)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium border transition ${
                       active
@@ -198,12 +208,45 @@ export default function FIRForm() {
           </div>
         )
       }
+      case 'repeat': {
+        const items = Array.isArray(value) && (value as string[]).length ? (value as unknown[]) : ['']
+        return (
+          <div key={field.name}>
+            {label}
+            <div className="space-y-2">
+              {items.map((item, i) => (
+                <input
+                  key={i}
+                  id={i === 0 ? controlId : `${controlId}-${i}`}
+                  className={inputClass}
+                  type="text"
+                  value={String(item ?? '')}
+                  onChange={(e) => {
+                    const next = [...items]
+                    next[i] = e.target.value
+                    handleChange(field, next)
+                  }}
+                  aria-label={`${field.label} item ${i + 1}`}
+                />
+              ))}
+              <button
+                type="button"
+                onClick={() => handleChange(field, [...items, ''])}
+                className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+              >
+                + Add item
+              </button>
+            </div>
+            {errorMsg}
+          </div>
+        )
+      }
       case 'richtext':
         return (
           <div key={field.name}>
             {label}
             <textarea
-              id={field.name}
+              id={controlId}
               className={inputClass}
               rows={5}
               value={String(value ?? '')}
@@ -217,7 +260,7 @@ export default function FIRForm() {
           <div key={field.name}>
             {label}
             <input
-              id={field.name}
+              id={controlId}
               type={field.type === 'number' ? 'number' : field.type}
               className={inputClass}
               value={String(value ?? '')}
@@ -254,7 +297,7 @@ export default function FIRForm() {
           <legend className="px-2 text-sm font-semibold text-slate-800">{section.label}</legend>
           {section.description && <p className="text-sm text-slate-500 mb-3">{section.description}</p>}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {section.fields.map(renderField)}
+            {section.fields.map((f) => renderField(f, section.id))}
           </div>
         </fieldset>
       ))}
