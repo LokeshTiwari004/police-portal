@@ -67,7 +67,7 @@
 - [x] `npm run lint` + `npm run build` (typechecks test files) pass
 - [x] Fix `validation.ts` `'narative'` typo — remove the dead special-case so `narrative` is required (matches schema + UI + tools)
 - [x] Pin fixed behaviour: `validation.test.ts` asserts empty `narrative` → `/required/` error
-- [ ] Eliminate hardcoded `requiredNow` drift: derive `fir/identify_required_fields` list from schema instead of whitelisting in `webmcpTools.ts`
+- [x] Eliminate hardcoded `requiredNow` drift: derive `fir/identify_required_fields` list from schema instead of whitelisting in `webmcpTools.ts`
 - [ ] Enable `chrome://flags/#enable-webmcp-testing`
 - [ ] Open app → run `getTools()` in console → confirm `fir/*` tools listed
 - [ ] Call `executeTool("fir/fill_field", ...)` manually → confirm UI updates

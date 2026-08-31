@@ -1,6 +1,35 @@
 import { incidentStore, type Incident } from './incidentStore'
 import { validateForm, requiredFieldsForSections } from './validation'
 import { telemetry } from './telemetry'
+import schemaJson from '../data/formSchema.json'
+
+interface SchemaField {
+  name: string
+  label: string
+  type: string
+  required?: boolean
+  rule?: string
+  requiredWhen?: { field: string; isEmpty: boolean }
+}
+interface SchemaSection {
+  id: string
+  label: string
+  description?: string
+  dependsOn?: { field: string; includeAny: string[] }
+  fields: SchemaField[]
+}
+const FIR_SCHEMA = (schemaJson as { sections: SchemaSection[] }).sections
+
+/**
+ * Fields that are required in always-visible sections (no dependsOn), derived
+ * from formSchema.json so the tool never drifts from what the form enforces.
+ */
+function requiredFieldsNow(): string[] {
+  return FIR_SCHEMA.filter((s) => !s.dependsOn)
+    .flatMap((s) => s.fields)
+    .filter((f) => f.required)
+    .map((f) => f.name)
+}
 
 /**
  * WebMCP tool registry.
@@ -134,7 +163,7 @@ function getFirTools(): ToolDefinition[] {
         const list = (sections as string[]) ?? []
         const hidden = requiredFieldsForSections(list)
         return JSON.stringify({
-          requiredNow: ['complainant.name', 'complainant.phone', 'offense.sections', 'narrative'],
+          requiredNow: requiredFieldsNow(),
           hiddenWhenRevealed: hidden,
           tip: 'Use fir/fill_field to populate fields. Use fir/flag_missing to surface gaps.',
         })

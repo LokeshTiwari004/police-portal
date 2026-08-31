@@ -2,12 +2,25 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { incidentStore } from '../lib/incidentStore'
 import { registerTools } from '../lib/webmcpTools'
 import { mockModelContext, clearStore } from './modelContextMock'
+import schemaJson from '../data/formSchema.json'
 
 /**
  * Integration test: exercises the shared incident store as the "backend"
  * behind the fir/* WebMCP tools end-to-end (create -> fill -> validate -> submit),
  * with document.modelContext mocked to intercept tool registration.
  */
+
+type F = { name: string; required?: boolean }
+type S = { dependsOn?: unknown; fields: F[] }
+const SCHEMA_SECTIONS = (schemaJson as { sections: S[] }).sections
+
+/** Mirror of the tool's derivation: required fields in always-visible sections. */
+function requiredNowFromSchema(): string[] {
+  return SCHEMA_SECTIONS.filter((s) => !s.dependsOn)
+    .flatMap((s) => s.fields)
+    .filter((f) => f.required)
+    .map((f) => f.name)
+}
 
 beforeEach(clearStore)
 
@@ -19,6 +32,19 @@ describe('fir/* tools integrate with incidentStore', () => {
     expect(names).toContain('fir/fill_field')
     expect(names).toContain('fir/validate_form')
     expect(names).toContain('fir/submit')
+  })
+
+  it('identify_required_fields derives requiredNow from the schema, not a hardcoded list', async () => {
+    const mc = mockModelContext()
+    await registerTools('fir')
+    const tool = mc.registered.find((t) => t.name === 'fir/identify_required_fields')!
+    const out = JSON.parse((await tool.execute({ sections: ['379'] })) as string)
+
+    const expected = requiredNowFromSchema()
+    expect(expected.length).toBeGreaterThan(0)
+    expect(out.requiredNow.sort()).toEqual(expected.sort())
+    // The schema-driven list includes narrative (regression: previously hardcoded).
+    expect(out.requiredNow).toContain('narrative')
   })
 
   it('fill_field -> validate_form -> submit persists a complete FIR', async () => {
