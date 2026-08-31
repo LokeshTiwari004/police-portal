@@ -106,8 +106,8 @@ Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a 
 - [ ] Metric: **End-to-end success** — agent fills FIR → validates → submits → UI reflects it (goal: 1 pass in ≤60s)
   - [ ] Automated: extend `webmcp.integration.test.ts` to full `fill → validate → submit` + assert store `status`
   - [ ] Demo: screencast of the live flow
-- [ ] Metric: **Validation parity** — `fir/validate_form` result == FIRForm UI errors for same state
-  - [ ] Test: parity case, empty narrative → match UI + tool both reject
+- [x] Metric: **Validation parity** — `fir/validate_form` result == FIRForm UI errors for same state
+  - [x] Test: parity case, empty narrative → match UI + tool both reject (`src/test/parity.test.tsx`)
 
 ### Robustness
 - [ ] Metric: **Round-trip cases matched** — N mocked clean/edge cases all pass (goal: 100%)

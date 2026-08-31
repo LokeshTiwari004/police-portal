@@ -80,7 +80,7 @@ Per metric: target / actual / evidence → recorded in this doc's status table (
 | Tool discovery (6/3/3) | all present | — | vitest |
 | No duplicate tools | 0 dupes | — | vitest |
 | E2E fill→validate→submit | 1 pass ≤60s | — | vitest + video |
-| Validation parity | 100% | — | parity corpus |
+| Validation parity | 100% | 2 cases green (`src/test/parity.test.tsx`) | parity corpus |
 | Cross-module same record | id/firNumber stable | — | vitest |
 | LCP / INP / CLS | ≤1.5s / ≤120ms / ≤0.05 | — | Lighthouse |
 | Demo video | <3min, audio | — | YouTube |
