@@ -1,0 +1,98 @@
+[
+  {
+    "rcNumber": "UP14C1234",
+    "ownerName": "Rajesh Kumar",
+    "address": "123 MG Road, Lucknow",
+    "vehicleClass": "MCWG",
+    "makerModel": "Hero Splendor Plus",
+    "registrationDate": "2019-05-14",
+    "engineCapacity": "97.2 cc",
+    "fuelType": "Petrol",
+    "fitnessUpto": "2027-05-13",
+    "insuranceUpto": "2026-04-30"
+  },
+  {
+    "rcNumber": "UP32AB9876",
+    "ownerName": "Sunita Verma",
+    "address": "8 Civil Lines, Mall Avenue, Lucknow",
+    "vehicleClass": "LMV",
+    "makerModel": "Maruti Suzuki Swift VXI",
+    "registrationDate": "2021-02-08",
+    "engineCapacity": "1197 cc",
+    "fuelType": "Petrol",
+    "fitnessUpto": "2031-02-07",
+    "insuranceUpto": "2026-01-15"
+  },
+  {
+    "rcNumber": "UP32AB5432",
+    "ownerName": "Ramesh Patel",
+    "address": "Nyay Marg, Hazratganj, Lucknow",
+    "vehicleClass": "HMV",
+    "makerModel": "Tata 407",
+    "registrationDate": "2017-11-20",
+    "engineCapacity": "2956 cc",
+    "fuelType": "Diesel",
+    "fitnessUpto": "2027-11-19",
+    "insuranceUpto": "2026-10-05"
+  },
+  {
+    "rcNumber": "UP14E1122",
+    "ownerName": "Anil Kumar",
+    "address": "Flat 3C, Green Residency, Civil Lines",
+    "vehicleClass": "LMV",
+    "makerModel": "Hyundai Creta SX",
+    "registrationDate": "2022-07-30",
+    "engineCapacity": "1493 cc",
+    "fuelType": "Diesel",
+    "fitnessUpto": "2032-07-29",
+    "insuranceUpto": "2026-07-20"
+  },
+  {
+    "rcNumber": "UP32D3344",
+    "ownerName": "Gaurav Mehta",
+    "address": "21 Sector 15, Gomti Nagar, Lucknow",
+    "vehicleClass": "Bus",
+    "makerModel": "Ashok Leyland Viking",
+    "registrationDate": "2018-03-12",
+    "engineCapacity": "5660 cc",
+    "fuelType": "Diesel",
+    "fitnessUpto": "2028-03-11",
+    "insuranceUpto": "2026-02-28"
+  },
+  {
+    "rcNumber": "UP14B7788",
+    "ownerName": "Meena Devi",
+    "address": "12 Alambagh Lane, Lucknow",
+    "vehicleClass": "MCWG",
+    "makerModel": "TVS Jupiter",
+    "registrationDate": "2020-09-25",
+    "engineCapacity": "109.7 cc",
+    "fuelType": "Petrol",
+    "fitnessUpto": "2030-09-24",
+    "insuranceUpto": "2026-09-10"
+  },
+  {
+    "rcNumber": "UP32AB2211",
+    "ownerName": "Priya Nair",
+    "address": "5 Alambagh Lane, Lucknow",
+    "vehicleClass": "LMV",
+    "makerModel": "Tata Nexon EV",
+    "registrationDate": "2023-01-05",
+    "engineCapacity": "Electric",
+    "fuelType": "Electric",
+    "fitnessUpto": "2033-01-04",
+    "insuranceUpto": "2027-01-01"
+  },
+  {
+    "rcNumber": "UP14F5566",
+    "ownerName": "Aisha Khan",
+    "address": "9 LDA Colony, Kanpur Road, Lucknow",
+    "vehicleClass": "MCWG",
+    "makerModel": "Royal Enfield Classic 350",
+    "registrationDate": "2016-06-18",
+    "engineCapacity": "349 cc",
+    "fuelType": "Petrol",
+    "fitnessUpto": "2026-06-17",
+    "insuranceUpto": "2025-12-31"
+  }
+]

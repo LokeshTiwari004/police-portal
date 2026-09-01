@@ -1,0 +1,21 @@
+{
+  "offences": [
+    { "offenseCode": "119", "section": "MVA 119", "label": "Over-speeding", "baseFine": 1000 },
+    { "offenseCode": "123", "section": "MVA 123", "label": "Riding without helmet", "baseFine": 1000 },
+    { "offenseCode": "126", "section": "MVA 126", "label": "Dangerous driving", "baseFine": 5000 },
+    { "offenseCode": "143", "section": "MVA 143", "label": "Driving without licence", "baseFine": 5000 },
+    { "offenseCode": "177", "section": "MVA 177", "label": "Disobeying traffic rules", "baseFine": 500 },
+    { "offenseCode": "180", "section": "MVA 180", "label": "Drunk driving", "baseFine": 2000 },
+    { "offenseCode": "190", "section": "MVA 190", "label": "Riding without insurance", "baseFine": 2000 },
+    { "offenseCode": "194", "section": "MVA 194", "label": "Over-loading", "baseFine": 10000 },
+    { "offenseCode": "208", "section": "MVA 208", "label": "Vehicle unfit / defect", "baseFine": 2000 }
+  ],
+  "vehicleClassMultiplier": {
+    "LMV": 1.0,
+    "MCWG": 0.5,
+    "HMV": 1.5,
+    "Bus": 1.2
+  },
+  "defaultFine": 500,
+  "defaultMultiplier": 1.0
+}

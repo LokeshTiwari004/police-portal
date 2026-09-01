@@ -44,24 +44,22 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 ## ⚙️ Should-Have: e-Challan
 
 ### Data
-- [~] `data/mvaFines.json` — **not created**; fine matrix is inline in `challan.auto_calculate_fine`
-- [~] `data/mockRC.json` — **not created**; `challan.lookup_rc` returns a single hardcoded record
+- [x] `data/mvaFines.json` — fine matrix by offence + vehicle-class multiplier; `challan.auto_calculate_fine` reads it
+- [x] `data/mockRC.json` — Vahan-style vehicle records; `challan.lookup_rc` reads it (found / not-found)
 
 ### UI + Tools
 - [x] `components/ChallanGenerator.tsx`
 - [x] Tools: `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.submit`
-- [ ] Move fine matrix + RC lookup to JSON data files (replace inline stub values)
 - [ ] Test: create challan from an existing FIR incident (cross-module integration)
 
 ## 🎯 Stretch Goal: ERSS-112 Dispatch
 
 ### Data
-- [~] `data/natureCodes.json` — **not created**; keyword → nature-code classifier is inline in `dispatch.classify_nature`
+- [x] `data/natureCodes.json` — keyword → ERSS-112 nature-code rules; `dispatch.classify_nature` reads it (adds TRF-002 Traffic code)
 
 ### UI + Tools
 - [x] `components/DispatchConsole.tsx`
 - [x] Tools: `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit`
-- [ ] Move classifier rules to `data/natureCodes.json`
 - [ ] Test cross-module flow: FIR incident → dispatch call → unit assigned
 
 ## 🎬 System Testing & Evaluation Metrics (Hackathon)

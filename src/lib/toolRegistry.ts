@@ -44,6 +44,43 @@ import type { Incident } from './incidentStore'
 import { validateForm, requiredFieldsForSections } from './validation'
 import schemaJson from '../data/formSchema.json'
 import mockIncidents from '../data/mockIncidents.json'
+import mockRC from '../data/mockRC.json'
+import mvaFines from '../data/mvaFines.json'
+import natureCodes from '../data/natureCodes.json'
+
+interface RcRecord {
+  rcNumber: string
+  ownerName: string
+  address: string
+  vehicleClass: string
+  makerModel?: string
+  registrationDate?: string
+  engineCapacity?: string
+  fuelType?: string
+  fitnessUpto?: string
+  insuranceUpto?: string
+}
+
+interface FineOffence {
+  offenseCode: string
+  baseFine: number
+}
+interface FineMatrix {
+  offences: FineOffence[]
+  vehicleClassMultiplier: Record<string, number>
+  defaultFine: number
+  defaultMultiplier: number
+}
+
+interface NatureRule {
+  natureCode: string
+  label: string
+  keywords: string[]
+}
+
+const RC_RECORDS = mockRC as RcRecord[]
+const FINE_MATRIX = mvaFines as FineMatrix
+const NATURE_RULES = natureCodes as NatureRule[]
 
 const FIR_SCHEMA = (schemaJson as { sections: SchemaSection[] }).sections
 
@@ -258,8 +295,10 @@ export function getChallanTools(): ToolDefinition[] {
         required: ['rcNumber'],
       },
       execute: async ({ rcNumber }) => {
-        // TODO(Should-Have phase): query mockRC.json
-        return JSON.stringify({ rcNumber, ownerName: 'Rajesh Kumar', address: '123 MG Road, Lucknow', vehicleClass: 'MCWG', status: 'found' })
+        const rc = RC_RECORDS.find((r) => r.rcNumber.toLowerCase() === String(rcNumber ?? '').toLowerCase())
+        if (!rc) return JSON.stringify({ rcNumber, status: 'not-found' })
+        const { rcNumber: rn, ...owner } = rc
+        return JSON.stringify({ rcNumber: rn, status: 'found', ...owner })
       },
     },
     {
@@ -277,11 +316,10 @@ export function getChallanTools(): ToolDefinition[] {
         required: ['offenseCode'],
       },
       execute: async ({ offenseCode, vehicleClass }) => {
-        // TODO(Should-Have phase): query mvaFines.json
-        const base: Record<string, number> = { 119: 1000, 123: 1000, 126: 5000, 143: 5000, 180: 2000, 194: 10000 }
-        const mult: Record<string, number> = { LMV: 1, MCWG: 0.5, HMV: 1.5, Bus: 1.2 }
-        const baseAmt = base[String(offenseCode)] ?? 500
-        return JSON.stringify({ offenseCode, vehicleClass, fineAmount: Math.round(baseAmt * (mult[String(vehicleClass)] ?? 1)) })
+        const offence = FINE_MATRIX.offences.find((o) => o.offenseCode === String(offenseCode ?? ''))
+        const baseAmt = offence?.baseFine ?? FINE_MATRIX.defaultFine
+        const mult = FINE_MATRIX.vehicleClassMultiplier[String(vehicleClass ?? '')] ?? FINE_MATRIX.defaultMultiplier
+        return JSON.stringify({ offenseCode, vehicleClass, fineAmount: Math.round(baseAmt * mult) })
       },
     },
     {
@@ -309,10 +347,11 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
       },
       execute: async ({ description }) => {
         const text = String(description ?? '').toLowerCase()
-        if (/heart|attack|medical|ambulance|breath/i.test(text)) return JSON.stringify({ natureCode: 'MED-001', label: 'Medical Emergency' })
-        if (/fire|smoke|burn/i.test(text)) return JSON.stringify({ natureCode: 'FIR-003', label: 'Fire' })
-        if (/stolen|theft|rob|assault|fight/i.test(text)) return JSON.stringify({ natureCode: 'POL-007', label: 'Police Assistance' })
-        if (/missing|child|women|harass/i.test(text)) return JSON.stringify({ natureCode: 'WCH-004', label: 'Women & Child' })
+        for (const rule of NATURE_RULES) {
+          if (rule.keywords.some((k) => text.includes(k))) {
+            return JSON.stringify({ natureCode: rule.natureCode, label: rule.label })
+          }
+        }
         return JSON.stringify({ natureCode: 'GEN-000', label: 'General' })
       },
       annotations: { readOnlyHint: true },

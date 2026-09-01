@@ -1,0 +1,32 @@
+[
+  {
+    "natureCode": "MED-001",
+    "label": "Medical Emergency",
+    "keywords": ["heart", "attack", "medical", "ambulance", "breath", "unconscious", "stroke", "accident injury"]
+  },
+  {
+    "natureCode": "FIR-003",
+    "label": "Fire",
+    "keywords": ["fire", "smoke", "burn", "blaze", "explosion"]
+  },
+  {
+    "natureCode": "POL-007",
+    "label": "Police Assistance",
+    "keywords": ["stolen", "theft", "rob", "assault", "fight", "burglary", "snatch", "dacoity"]
+  },
+  {
+    "natureCode": "WCH-004",
+    "label": "Women & Child",
+    "keywords": ["missing", "child", "women", "harass", "abuse", "domestic", "kidnap"]
+  },
+  {
+    "natureCode": "TRF-002",
+    "label": "Traffic",
+    "keywords": ["collision", "crash", "traffic", "hit and run", "diversion", "jam"]
+  },
+  {
+    "natureCode": "GEN-000",
+    "label": "General",
+    "keywords": []
+  }
+]
