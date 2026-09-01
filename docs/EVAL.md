@@ -78,9 +78,29 @@ Per metric: target / actual / evidence → recorded in this doc's status table (
 | Metric | Target | Actual | Evidence |
 |---|---|---|---|
 | Tool discovery (6/3/3) | all present | 12 shown under DevTools→Application→WebMCP | vitest + DevTools |
-| No duplicate tools | 0 dupes | 0 | vitest |
+| No duplicate tools | 0 dupes | 0 | vitest + MCP harness |
 | E2E fill→validate→submit | 1 pass ≤60s | observed: extension agent drove 12 tool calls (Metrics tab counts) | vitest + extension |
 | Validation parity | 100% | 2 cases green (`src/test/parity.test.tsx`) | parity corpus |
 | Cross-module same record | id/firNumber stable | — | vitest |
 | LCP / INP / CLS | ≤1.5s / ≤120ms / ≤0.05 | — | Lighthouse |
 | Demo video | <3min, audio | — | YouTube |
+
+### Deterministic MCP harness (evidence, autonomous)
+
+`npm run eval` (`server/eval-scenarios.ts`) round-trips a real MCP Client against
+`createPortalServer` — the exact surface an external agent gets via `npm run mcp` — and
+writes `docs/EVAL_RESULTS.md`. Current: **7/7 PASS** — tool discovery (12, no dupes), E2E
+fill→validate→submit, robustness (incomplete form rejected with errors + submit refused),
+conditional reveal (theft→`property`), cross-module dispatch assignment (`AMB-147`),
+per-tool latency (sub-ms, in-process). It is deterministic (no LLM/browser).
+
+While building it the harness surfaced and fixed a real bug: `jsonSchemaToZod` made every
+property mandatory when `required` was empty, so optional-arg tools like
+`dispatch.get_available_units` rejected a valid empty call. Fixed in `server/mcp-server.ts`
+(non-required props are optional), pinned by `server/mcp-server.test.ts`, and exercised by
+the harness's cross-module scenario.
+
+The browser-only metrics (12 tools under DevTools→WebMCP on the Vercel origin, Tool
+Inspector-driven prod calls + Metrics counts, dual human+agent editing, parity on live form,
+console cleanliness, demo video) are covered by the live-portal driver prompt in
+`docs/LIVE_PORTAL_EVAL.md`.

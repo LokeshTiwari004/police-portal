@@ -14,8 +14,8 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 - [x] `vercel.json` SPA rewrite → `index.html`
 - [x] Project linked + deployed (auto-deploy from `main`)
 - [x] Production URL live: `https://police-portal-mu.vercel.app/` (HTTPS, origin-keyed)
-- [ ] Verify WebMCP on the Vercel URL in Chrome — Application → WebMCP shows all 12 tools under "Available Tools" (no chrome flag needed on HTTPS prod)
-- [ ] Drive the tools on prod with the Model Context Tool Inspector extension (Metrics tab counts calls)
+- [ ] Verify WebMCP on the Vercel URL in Chrome — Application → WebMCP shows all 12 tools under "Available Tools" (no chrome flag needed on HTTPS prod) — run `docs/LIVE_PORTAL_EVAL.md` Part A
+- [ ] Drive the tools on prod with the Model Context Tool Inspector extension (Metrics tab counts calls) — run `docs/LIVE_PORTAL_EVAL.md` Part E
 
 ## 📄 Must-Have: FIR Copilot
 
@@ -60,7 +60,7 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 ### UI + Tools
 - [x] `components/DispatchConsole.tsx`
 - [x] Tools: `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit`
-- [ ] Test cross-module flow: FIR incident → dispatch call → unit assigned
+- [x] Cross-module flow proved by MCP harness: `dispatch.classify_nature` → units → `assign_unit` assigns on the shared-session record (`npm run eval`, `docs/EVAL_RESULTS.md`)
 
 ## 🎬 System Testing & Evaluation Metrics (Hackathon)
 
@@ -70,16 +70,16 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 - [ ] Demo artifact: screencast of the live flow
 
 ### Robustness
-- [~] Round-trip cases — partially covered; expand enum (missing required, invalid phone/email/date, conditional `requiredWhen`, empty narrative, no incident)
+- [~] Round-trip cases — MCP harness covers missing-required reject + submit refused; browser-side invalid phone/email/date + conditional `requiredWhen` + empty narrative + no-incident still to verify via `docs/LIVE_PORTAL_EVAL.md`
 - [x] Graceful degradation — no `document.modelContext` → App shows "WebMCP tools pending"
 
 ### Agent Collaboration
-- [x] Tool discovery completeness — all 12 register on first load (`App.test.tsx`)
-- [~] State continuity — shared `incidentStore` across tabs is in place; add cross-tab incident round-trip test
+- [x] Tool discovery completeness — all 12 register on first load (`App.test.tsx` + MCP harness `tools/list`)
+- [x] State continuity — shared `incidentStore` across modules; MCP harness assigns dispatch on the same record (sub-ms round-trip)
 
 ### Performance / UX
-- [x] No duplicate tools on re-registration (idempotent claim-before-register; integration test)
-- [ ] No console errors during a full agent-driven session (manual QA)
+- [x] No duplicate tools on re-registration (idempotent claim-before-register; MCP harness reports 0 dupes)
+- [ ] No console errors during a full agent-driven session (manual QA — see `docs/LIVE_PORTAL_EVAL.md` Part A)
 
 ### Judges' walkthrough checklist (demo script)
 - [x] Human + agent on same live form (dual editing)
@@ -108,7 +108,9 @@ Tool definitions are shared: `src/lib/toolRegistry.ts` (env-agnostic, parameteri
 - [x] `tsconfig.server.json` project reference — `npm run build` type-checks the server
 - [x] `npm run mcp` script
 - [x] Verified `tools/list` (12 tools + schema + readOnly) and `tools/call` (`fill_field` → `validate_form` → `submit`)
-- [x] Tests: `src/test/mcpBridge.test.ts` (3 tests)
+- [x] Tests: `src/test/mcpBridge.test.ts` + `server/mcp-server.test.ts` (zod-optional regression)
+- [x] MCP eval harness: `npm run eval` (`server/eval-scenarios.ts`) → `docs/EVAL_RESULTS.md` — **7/7 PASS** (discovery, no dupes, E2E, robustness, conditional reveal, cross-module, latency)
+- [x] Fixed `jsonSchemaToZod` bug surfaced by the harness: empty `required` made all props mandatory → optional-arg tools rejected valid empty calls. Non-required props are now `.optional()`
 - [ ] Optional: add a short bridge-demo segment to the video
 
 ## 🧭 Notes / Decisions

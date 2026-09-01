@@ -10,6 +10,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - `npm run test:watch` — vitest watch mode
 - `npm run test:coverage` — run with v8 coverage report
 - `npm run mcp` — run the external-agent MCP bridge (`tsx server/mcp-server.ts`, stdio)
+- `npm run eval` — run the MCP eval harness (`tsx server/eval-scenarios.ts`): drives a real MCP Client against `createPortalServer` over the in-memory transport, runs the hackathon eval scenarios, and rewrites `docs/EVAL_RESULTS.md` (currently 7/7 PASS).
 - Run ONE test file: `npx vitest run src/lib/validation.test.ts`
 - Run tests matching a name: `npx vitest run -t "fill_field"`
 
@@ -28,7 +29,8 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - Test files live next to code: `src/**/*.test.ts` / `*.test.tsx` (config include matches this pattern).
 - Setup: `src/test/setup.ts` imports `@testing-library/jest-dom/vitest` for DOM matchers (`toBeInTheDocument`, etc.).
 - Tools: `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`.
-- Existing suites: unit (`src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`), integration (`src/test/webmcp.integration.test.ts` mock `document.modelContext` to drive `fir.*` tools against the store end-to-end), system (`src/App.test.tsx` renders the app shell + tab switching, and asserts all 12 tools register on mount), bridge (`src/test/mcpBridge.test.ts` drives the shared tool definitions against the in-memory store — the same store/registry the Node MCP server uses).
+- Existing suites: unit (`src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`), integration (`src/test/webmcp.integration.test.ts` mock `document.modelContext` to drive `fir.*` tools against the store end-to-end), system (`src/App.test.tsx` renders the app shell + tab switching, and asserts all 12 tools register on mount), bridge (`src/test/mcpBridge.test.ts` drives the shared tool definitions against the in-memory store — the same store/registry the Node MCP server uses), server (`server/mcp-server.test.ts` pins the `jsonSchemaToZod` json-schema→zod conversion, incl. the optional-args regression). Vitest picks up tests in both `src/**` and `server/**`.
+- The MCP **eval harness** (`server/eval-scenarios.ts`, `npm run eval`) is a heavier, deterministic round-trip (real MCP Client ↔ `createPortalServer` over in-memory transport) that writes `docs/EVAL_RESULTS.md`; run it when tool behavior or the eval scenarios change, not on every test run.
 - `document.modelContext` is absent in jsdom — mock it in integration tests (see `src/test/webmcp.integration.test.ts`); `App.tsx` degrades to a "WebMCP tools pending" hint.
 - Clear `localStorage` between tests (storage key `police-portal:incidents`) — tests share jsdom's persisted storage.
 - Coverage: v8; current overall ~71% lines. Prefer covering new logic rather than padding challan/dispatch stub paths.
@@ -56,5 +58,6 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 ## Docs / planning
 - `docs/WebMCP_Police_Portal_ImplementationPlan.md` — full feature plan, tool schemas, build order.
 - `docs/TODO.md` — live task checklist (tracks what's built vs. pending). Update it as work lands.
+- `docs/EVAL.md` — hackathon rubric + evaluation evidence tracking. `docs/EVAL_RESULTS.md` is the auto-generated deterministic MCP-harness scorecard (see `npm run eval`); `docs/LIVE_PORTAL_EVAL.md` is a ready-to-paste driver prompt for a browser agent to capture the browser-only WebMCP evidence.
 - `.gitignore` excludes `.conversations/` (session transcripts, not for repo).
 - Keep this file current: update AGENTS.md in the same commit as the convention or command it describes.

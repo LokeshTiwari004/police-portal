@@ -11,7 +11,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview",
-    "mcp": "tsx server/mcp-server.ts"
+    "mcp": "tsx server/mcp-server.ts",
+    "eval": "tsx server/eval-scenarios.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

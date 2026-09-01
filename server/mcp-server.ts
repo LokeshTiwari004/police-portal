@@ -24,7 +24,7 @@ import { getFirTools, getChallanTools, getDispatchTools, type Store, type ToolDe
 import { createMemoryStore } from '../src/lib/memoryStore'
 
 /** Convert our JSON-schema `inputSchema` into a zod schema the MCP SDK requires. */
-function jsonSchemaToZod(schema: Record<string, unknown>): z.ZodTypeAny {
+export function jsonSchemaToZod(schema: Record<string, unknown>): z.ZodTypeAny {
   if (!schema || schema.type !== 'object') return z.any()
 
   const props = (schema.properties ?? {}) as Record<string, { type?: unknown; description?: string; items?: { type?: string } }>
@@ -46,12 +46,10 @@ function jsonSchemaToZod(schema: Record<string, unknown>): z.ZodTypeAny {
   }
 
   const required = (schema.required ?? []) as string[]
-  const obj = z.object(shape)
-  if (required.length) {
-    const mask = Object.fromEntries(required.map((k) => [k, true])) as Record<string, true>
-    return obj.required(mask)
-  }
-  return obj
+  const partial = z.object(shape).partial()
+  if (!required.length) return partial
+  const mask = Object.fromEntries(required.map((k) => [k, true])) as Record<string, true>
+  return partial.required(mask)
 }
 
 function mapJsonScalar(type: unknown): z.ZodTypeAny {
