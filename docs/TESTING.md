@@ -159,8 +159,8 @@ is absent). Keep it green — it guards the no-modelContext path.
 
 ## 5. Tool discovery completeness (agent collaboration)
 
-**Goal**: all `fir.*` (6), `challan.*` (3), `dispatch.*` (3) register on the
-corresponding tab switch.
+**Goal**: all `fir.*` (6), `challan.*` (3), `dispatch.*` (3) register on first
+load (all 12 via `registerAllTools` on mount).
 
 **File**: `src/test/webmcp.integration.test.ts`
 

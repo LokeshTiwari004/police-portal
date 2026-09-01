@@ -41,8 +41,8 @@ npm run dev        # http://localhost:5173
 1. Open the live URL (or localhost) in **Chrome 149+** (or the ChatGPT desktop
    in-app browser).
 2. `chrome://flags/#enable-webmcp-testing` → Relaunch.
-3. DevTools → **Application → WebMCP** — the 12 tools appear under
-   "Available Tools".
+3. DevTools → **Application → WebMCP** — all 12 tools appear under
+   "Available Tools" on first load (they register on mount, not per tab).
 4. Drive them with a real agent: install the
    [Model Context Tool Inspector](https://chromewebstore.google.com/detail/model-context-tool-inspec/gbpdfapgefenggkahomfgkhfehlcenpd)
    extension and prompt it in natural language (sends to

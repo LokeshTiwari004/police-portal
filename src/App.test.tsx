@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import App from './App'
+import { mockModelContext } from './test/modelContextMock'
 
 /**
  * System test: renders the full App shell (header, tab nav, module content)
@@ -40,5 +41,20 @@ describe('App shell', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'FIR' }))
     expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
+  })
+
+  it('registers all 12 tools on first load, independent of the open tab', async () => {
+    const mc = mockModelContext()
+    render(<App />)
+
+    await waitFor(() => expect(mc.registered.length).toBe(12))
+    const names = mc.registered.map((t) => t.name)
+    expect(names).toEqual(
+      expect.arrayContaining([
+        'fir.fill_field',
+        'challan.lookup_rc',
+        'dispatch.assign_unit',
+      ]),
+    )
   })
 })

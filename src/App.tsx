@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { registerTools, registerAllTools } from './lib/webmcpTools'
+import { registerAllTools } from './lib/webmcpTools'
 import FIRForm from './components/FIRForm'
 import ChallanGenerator from './components/ChallanGenerator'
 import DispatchConsole from './components/DispatchConsole'
@@ -20,8 +20,10 @@ export default function App() {
 
   useEffect(() => {
     let cancelled = false
-    const reg = tab === 'metrics' ? registerAllTools() : registerTools(tab as 'fir' | 'challan' | 'dispatch')
-    reg.then(async () => {
+    // Register all 12 tools on first load so the full surface is available to an
+    // agent immediately, regardless of which tab is open. Registration is
+    // idempotent, so re-runs are safe no-ops.
+    registerAllTools().then(async () => {
       if (cancelled) return
       try {
         const mc = (document as unknown as { modelContext?: any }).modelContext
@@ -34,7 +36,7 @@ export default function App() {
     return () => {
       cancelled = true
     }
-  }, [tab])
+  }, [])
 
   return (
     <div className="min-h-screen bg-slate-100 text-slate-900">

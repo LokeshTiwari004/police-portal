@@ -195,7 +195,7 @@ In-memory store with functions:
 | Shared incident model | YES | YES (link challan) | YES (dispatch triage) |
 | Shared mock backend | YES | YES | YES |
 | Unified WebMCP namespace | YES | YES | YES |
-| Dynamic tool registration | YES (on tab switch) | YES | YES |
+| Dynamic tool registration | YES (all 12 on mount) | YES | YES |
 
 ### Tool Registration Pattern (webmcpTools.js):
 ```js

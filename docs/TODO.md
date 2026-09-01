@@ -37,7 +37,7 @@
 - [x] `lib/validation.ts` — `validateField` + `validateForm` + `requiredFieldsForSections` (conditional rules)
 
 ### Phase 3: FIR Form UI
-- [x] `components/Dashboard` logic in `App.tsx` (tab switch re-registers tools)
+- [x] `components/Dashboard` logic in `App.tsx` (registers all 12 tools on mount)
 - [x] Build `components/FIRForm.tsx` — dynamic form rendering using `formSchema.json`:
   - [x] Handles section `dependsOn` / `includeAny` (property section reveals on theft codes)
   - [x] Field types: text, textarea, tel, email, date, time, number, select, multiselect, richtext
@@ -55,14 +55,15 @@
   - `fir.validate_form` ✅
   - `fir.submit` ✅
   - (also stubbed `challan.*` + `dispatch.*` for later phases)
-- [x] `registerTools(module)` calls `document.modelContext.registerTool` on module switch
+- [x] `registerAllTools()` calls `document.modelContext.registerTool` for all modules
+- [x] `App.tsx` registers all 12 tools on mount (full surface available on load, not per tab)
 - [x] Verify `npm run build` typechecks cleanly
 
 ### Phase 5: Testing
 - [x] Add Vitest suite (Vitest 4 + jsdom + testing-library):
   - [x] Unit: `src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`
   - [x] Integration: `src/test/webmcp.integration.test.ts` (mocks `document.modelContext`, drives `fir.*` against store)
-  - [x] System: `src/App.test.tsx` (renders shell + tab switching)
+  - [x] System: `src/App.test.tsx` (renders shell + tab switching, asserts 12 tools on mount)
   - [x] `npm test` / `npm run test:watch` / `npm run test:coverage` scripts
 - [x] `npm run lint` + `npm run build` (typechecks test files) pass
 - [x] Fix `validation.ts` `'narative'` typo — remove the dead special-case so `narrative` is required (matches schema + UI + tools)
@@ -115,8 +116,8 @@ Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a 
 - [ ] Metric: **Graceful degradation** — no `document.modelContext` → App shows "WebMCP tools pending" (covered by `App.test.tsx`)
 
 ### Agent Collaboration (the WebMCP differentiator)
-- [ ] Metric: **Tool discovery completeness** — all `fir.*` (6), `challan.*` (3), `dispatch.*` (3) registered on tab switch
-  - [ ] Test: assert `registerTools` list per module
+- [x] Metric: **Tool discovery completeness** — all `fir.*` (6), `challan.*` (3), `dispatch.*` (3) register on first load
+  - [x] Test: `App.test.tsx` asserts all 12 register on mount
 - [ ] Metric: **State continuity** — agent edits on FIR tab reflected on challan/dispatch tab (shared incidentStore)
   - [ ] Test: cross-tab incident update round-trip
 
@@ -190,5 +191,5 @@ in `src/lib/webmcpTools.ts`:
 - **Versions (Aug 2026)**: React 19 + Vite 9.2.0 + TailwindCSS 4.3.3 + Zustand 5.x
 - **Shared model**: Design `incidentStore.js` incident schema first — reused by all modules
 - **Tool namespacing**: Use `.` separators (`fir.fill_field`, `challan.lookup_rc`) — WebMCP rejects `/` in tool names (`InvalidStateError: Invalid tool name`)
-- **Dynamic registration**: Register `fir.*` tools on tab switch — keeps tool list clean
+- **Register all on mount**: `App.tsx` registers all 12 tools on first load (not per tab) so an agent sees the full surface immediately; registration is idempotent, so per-module calls stay safe no-ops.
 - **Origin isolation**: WebMCP requires a secure, **origin-keyed** document. Do NOT send `Origin-Agent-Cluster: ?0` (it opts out of origin-keying and disables WebMCP). Use the Chrome flag for localhost dev; Vercel handles prod HTTPS.
