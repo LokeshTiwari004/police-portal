@@ -1,195 +1,121 @@
 # TODO: WebMCP Police Portal
 
+Live: https://police-portal-mu.vercel.app/ · Repo: `github.com/LokeshTiwari004/police-portal`
+Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
+
 ## 🔨 Setup
-- [x] Scaffold React + Vite project — latest stable (React 19 + Vite 8.2.2 + TS):
-  ```bash
-  npm create vite@latest police-portal --template react-ts
-  cd police-portal
-  npm i
-  npm i tailwindcss @tailwindcss/vite zustand
-  ```
-- [x] Install TailwindCSS v4.3.3 (Vite plugin `@tailwindcss/vite`, no PostCSS config):
-  ```bash
-  npm i tailwindcss @tailwindcss/vite
-  # @import "tailwindcss"; added to src/index.css
-  ```
-- [x] Plugin wired in `vite.config.ts` (`plugins: [react(), tailwindcss()]`)
-- [x] Removed the `Origin-Agent-Cluster: ?0` header — it OPTS OUT of origin-keying and DISABLES WebMCP (`document.domain` SecurityError). Correct config: no header (see `vite.config.ts`).
-- [x] Verified `npm run build` + `npm run dev` (http://localhost:5173)
+- [x] Scaffold React + Vite project — React 19 + Vite + TS
+- [x] Install TailwindCSS v4 (Vite plugin `@tailwindcss/vite`, no PostCSS config)
+- [x] Plugin wired in `vite.config.ts`
+- [x] Removed the `Origin-Agent-Cluster: ?0` header — it OPTS OUT of origin-keying and DISABLES WebMCP (correct config: no header, see `vite.config.ts`)
+- [x] Verified `npm run build` + `npm run dev`
 
 ### Vercel Deployment
-- [ ] Create `vercel.json` (or rely on zero-config) — ensure `build` = `npm run build`, output = `dist`
-- [ ] Add `vercel` project via `npx vercel` → link repo `police-portal`
-- [ ] Production URL: `https://police-portal.vercel.app` (or name from CLI)
-- [ ] Confirm HTTPS on prod (Vercel) — WebMCP needs a secure, origin-keyed document; do NOT send `Origin-Agent-Cluster: ?0`
-- [ ] Enable `chrome://flags/#enable-webmcp-testing` on Vercel URL → verify `fir.*` tools live
-- [ ] Add a manual QA page / smoke test verifying `getTools()` + `executeTool` on prod
+- [x] `vercel.json` SPA rewrite → `index.html`
+- [x] Project linked + deployed (auto-deploy from `main`)
+- [x] Production URL live: `https://police-portal-mu.vercel.app/` (HTTPS, origin-keyed)
+- [ ] Verify WebMCP on the Vercel URL in Chrome — Application → WebMCP shows all 12 tools under "Available Tools" (no chrome flag needed on HTTPS prod)
+- [ ] Drive the tools on prod with the Model Context Tool Inspector extension (Metrics tab counts calls)
 
 ## 📄 Must-Have: FIR Copilot
 
-### Phase 1: Mock Data & Schema
-- [x] Generate `data/formSchema.json` — conditional logic for FIR form (6 sections, 15+ fields)
-- [x] Generate `data/offenseCodes.json` — sample IPC/IT/MVA sections (10 entries)
-- [x] Generate `data/mockIncidents.json` — seed incident records for `fir.find_similar_cases` (6 NCRB-style cases; tool now reads the archive from this file)
-- [x] `lib/incidentStore.ts` — shared store (`create`, `update`, `get`, `list`, localStorage-backed) + Incident type
+### Data & Schema
+- [x] `data/formSchema.json` — conditional logic for FIR form (sections, dependsOn/includeAny)
+- [x] `data/offenseCodes.json` — sample IPC/IT/MVA sections
+- [x] `data/mockIncidents.json` — 6 NCRB-style seed cases; `fir.find_similar_cases` reads its archive from this file
+- [x] `lib/incidentStore.ts` — shared localStorage-backed store + Incident type
 
-### Phase 2: Validation Logic
-- [x] `lib/validation.ts` — `validateField` + `validateForm` + `requiredFieldsForSections` (conditional rules)
+### Validation
+- [x] `lib/validation.ts` — `validateField` + `validateForm` + `requiredFieldsForSections`
+- [x] Fix `validation.ts` `'narative'` typo; `narrative` required (pinned by `validation.test.ts`)
 
-### Phase 3: FIR Form UI
-- [x] `components/Dashboard` logic in `App.tsx` (registers all 12 tools on mount)
-- [x] Build `components/FIRForm.tsx` — dynamic form rendering using `formSchema.json`:
-  - [x] Handles section `dependsOn` / `includeAny` (property section reveals on theft codes)
-  - [x] Field types: text, textarea, tel, email, date, time, number, select, multiselect, richtext
-  - [x] Renders inline validation errors + missing-field summary
-  - [x] `requiredWhen` (accused.description requires physical details when name empty)
-- [x] Wire form state changes to `incidentStore` (nested dotted-path updates on change)
-- [x] Component tests: `src/components/FIRForm.test.tsx` (conditional reveals, requiredWhen, summary clearing)
+### UI
+- [x] `App.tsx` — dashboard shell, registers all 12 tools on mount
+- [x] `components/FIRForm.tsx` — dynamic form from `formSchema.json`, conditional reveals, inline validation, missing-field summary, `requiredWhen`
+- [x] Wire form state → `incidentStore` (nested dotted-path updates)
+- [x] `components/FIRForm.test.tsx` (conditional reveals, requiredWhen, summary clearing)
 
-### Phase 4: WebMCP Tools
-- [x] Write `lib/webmcpTools.ts` — register `fir.*` tools:
-  - `fir.identify_required_fields` ✅
-  - `fir.fill_field` ✅
-  - `fir.flag_missing` ✅
-  - `fir.find_similar_cases` ✅
-  - `fir.validate_form` ✅
-  - `fir.submit` ✅
-  - (also stubbed `challan.*` + `dispatch.*` for later phases)
-- [x] `registerAllTools()` calls `document.modelContext.registerTool` for all modules
-- [x] `App.tsx` registers all 12 tools on mount (full surface available on load, not per tab)
-- [x] Verify `npm run build` typechecks cleanly
-
-### Phase 5: Testing
-- [x] Add Vitest suite (Vitest 4 + jsdom + testing-library):
-  - [x] Unit: `src/lib/validation.test.ts`, `src/lib/incidentStore.test.ts`
-  - [x] Integration: `src/test/webmcp.integration.test.ts` (mocks `document.modelContext`, drives `fir.*` against store)
-  - [x] System: `src/App.test.tsx` (renders shell + tab switching, asserts 12 tools on mount)
-  - [x] `npm test` / `npm run test:watch` / `npm run test:coverage` scripts
-- [x] `npm run lint` + `npm run build` (typechecks test files) pass
-- [x] Fix `validation.ts` `'narative'` typo — remove the dead special-case so `narrative` is required (matches schema + UI + tools)
-- [x] Pin fixed behaviour: `validation.test.ts` asserts empty `narrative` → `/required/` error
-- [x] Eliminate hardcoded `requiredNow` drift: derive `fir.identify_required_fields` list from schema instead of whitelisting in `webmcpTools.ts`
-- [ ] Enable `chrome://flags/#enable-webmcp-testing`
-- [ ] Open app → run `getTools()` in console → confirm `fir.*` tools listed
-- [ ] Call `executeTool("fir.fill_field", ...)` manually → confirm UI updates
-- [ ] Simulate full flow: fill form → validate → submit
+### WebMCP tools (`fir.*`)
+- [x] `fir.identify_required_fields` (derives `requiredNow` from schema)
+- [x] `fir.fill_field` · `fir.flag_missing` · `fir.find_similar_cases` · `fir.validate_form` · `fir.submit`
+- [x] All 12 tools register on mount (full surface on load, not per tab); idempotent registration
+- [x] Tool descriptions + `title` polished for agent context (dotted paths ↔ form labels)
 
 ## ⚙️ Should-Have: e-Challan
 
-### Phase 6: Challan Logic
-- [ ] Generate `data/mvaFines.json` — fine amounts by offense + vehicle class
-- [ ] Generate `data/mockRC.json` — fake Vahan DB (10–20 vehicle records)
-- [ ] Implement `auto_calculate_fine({section, vehicle_class, state})` in `utils/mockApi.js`
-- [ ] Implement `lookup_rc({rc_number})` → fetches owner/VehicleClass from `mockRC.json`
+### Data
+- [~] `data/mvaFines.json` — **not created**; fine matrix is inline in `challan.auto_calculate_fine`
+- [~] `data/mockRC.json` — **not created**; `challan.lookup_rc` returns a single hardcoded record
 
-### Phase 7: Challan UI + Tools
-- [ ] Build `components/ChallanGenerator.jsx`
-- [ ] Register `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.set_evidence_photo`, `challan.submit` tools
-- [ ] Test integration: create challan from existing FIR incident
+### UI + Tools
+- [x] `components/ChallanGenerator.tsx`
+- [x] Tools: `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.submit`
+- [ ] Move fine matrix + RC lookup to JSON data files (replace inline stub values)
+- [ ] Test: create challan from an existing FIR incident (cross-module integration)
 
 ## 🎯 Stretch Goal: ERSS-112 Dispatch
 
-### Phase 8: Dispatch Console
-- [ ] Generate `data/natureCodes.json` — mapping of keywords to nature codes
-- [ ] Build `components/DispatchConsole.jsx` — incident list + mock map/grid of units
-- [ ] Simulate live unit updates via `setInterval`
-- [ ] Implement `classifier.js` → keyword-based nature code classifier
+### Data
+- [~] `data/natureCodes.json` — **not created**; keyword → nature-code classifier is inline in `dispatch.classify_nature`
 
-### Phase 9: Dispatch Tools
-- [ ] Register `dispatch.triage_channel`, `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit`, `dispatch.send_notification`
+### UI + Tools
+- [x] `components/DispatchConsole.tsx`
+- [x] Tools: `dispatch.classify_nature`, `dispatch.get_available_units`, `dispatch.assign_unit`
+- [ ] Move classifier rules to `data/natureCodes.json`
 - [ ] Test cross-module flow: FIR incident → dispatch call → unit assigned
 
 ## 🎬 System Testing & Evaluation Metrics (Hackathon)
 
-Judge rubric maps to measurable, demonstrable outputs. Each metric = a test + a demo artifact.
-
-### Correctness (Full-stack WebMCP flow works)
-- [ ] Metric: **End-to-end success** — agent fills FIR → validates → submits → UI reflects it (goal: 1 pass in ≤60s)
-  - [ ] Automated: extend `webmcp.integration.test.ts` to full `fill → validate → submit` + assert store `status`
-  - [ ] Demo: screencast of the live flow
-- [x] Metric: **Validation parity** — `fir.validate_form` result == FIRForm UI errors for same state
-  - [x] Test: parity case, empty narrative → match UI + tool both reject (`src/test/parity.test.tsx`)
+### Correctness (full-stack WebMCP flow works)
+- [x] End-to-end success — fill → validate → submit; covered by `webmcp.integration.test.ts` + `mcpBridge.test.ts`
+- [x] Validation parity — `fir.validate_form` == FIRForm UI errors (parity test)
+- [ ] Demo artifact: screencast of the live flow
 
 ### Robustness
-- [ ] Metric: **Round-trip cases matched** — N mocked clean/edge cases all pass (goal: 100%)
-  - [ ] Enum: missing required, invalid phone/email/date, conditional `requiredWhen`, empty narrative, no incident
-- [ ] Metric: **Graceful degradation** — no `document.modelContext` → App shows "WebMCP tools pending" (covered by `App.test.tsx`)
+- [~] Round-trip cases — partially covered; expand enum (missing required, invalid phone/email/date, conditional `requiredWhen`, empty narrative, no incident)
+- [x] Graceful degradation — no `document.modelContext` → App shows "WebMCP tools pending"
 
-### Agent Collaboration (the WebMCP differentiator)
-- [x] Metric: **Tool discovery completeness** — all `fir.*` (6), `challan.*` (3), `dispatch.*` (3) register on first load
-  - [x] Test: `App.test.tsx` asserts all 12 register on mount
-- [ ] Metric: **State continuity** — agent edits on FIR tab reflected on challan/dispatch tab (shared incidentStore)
-  - [ ] Test: cross-tab incident update round-trip
+### Agent Collaboration
+- [x] Tool discovery completeness — all 12 register on first load (`App.test.tsx`)
+- [~] State continuity — shared `incidentStore` across tabs is in place; add cross-tab incident round-trip test
 
 ### Performance / UX
-- [ ] Metric: **Tab-switch tool re-registration latency** — measurable, no duplicate tools (idempotent claim-before-register)
-  - [ ] Test: register same module twice → single tool set (no dupes)
-- [ ] Metric: **No console errors** during full agent-driven session
+- [x] No duplicate tools on re-registration (idempotent claim-before-register; integration test)
+- [ ] No console errors during a full agent-driven session (manual QA)
 
 ### Judges' walkthrough checklist (demo script)
-- [ ] Show human + agent on same live form (dual editing)
-- [ ] Show conditional field reveal driven by agent (`fir.fill_field` on offense → property section appears)
-- [ ] Show `fir.flag_missing` surfacing human-review fields
-- [ ] Show challan + dispatch consuming the same incident (integration story)
-- [ ] Show metrics above in a one-screen scorecard
+- [x] Human + agent on same live form (dual editing)
+- [x] Conditional field reveal driven by agent (`fir.fill_field` on offense → property section appears)
+- [x] `fir.flag_missing` surfaces human-review fields
+- [x] Challan + dispatch consume the same incident (shared store)
+- [x] Metrics one-screen scorecard
 
 ### Tracking
-- [ ] Record results in `docs/EVAL.md` per metric (target / actual / evidence)
-- [ ] Implementation recipes live in `docs/TESTING.md` (mock seam, copyable tests per metric)
+- [~] Record results in `docs/EVAL.md` per metric (target / actual / evidence)
+- [x] Implementation recipes live in `docs/TESTING.md`
 
 ## 🎬 Finalization
-
-- [ ] Record 2-min demo video (agent fills FIR → generates challan → assigns dispatch unit)
-- [ ] Final test run in Chrome with flag enabled
-- [ ] Push to GitHub (public repo with LICENSE)
-- [ ] Update README with setup + tool list + live URL
+- [ ] Record 2-3 min demo video (agent fills FIR → generates challan → assigns dispatch unit)
+- [ ] Final Chrome run with flag enabled
+- [x] Push to public GitHub repo (MIT LICENSE)
+- [x] README — setup + tool list + live URL (judge-facing, tight)
 
 ## 🤖 External-agent bridge (done — Node MCP server over shared tool logic)
 
-A WebMCP tool is callable only by an agent that lives in the same document
-(extension / in-app browser / inspector). To let an *external* AI (Claude
-Desktop, VS Code, any MCP client) drive the portal, we expose the same 12 tools
-over server-side MCP. Tool definitions are shared: `toolRegistry.ts` is
-environment-agnostic and is adapted to the browser (WebMCP, via
-`webmcpTools.ts`) and to Node (MCP, via `server/mcp-server.ts`).
+Tool definitions are shared: `src/lib/toolRegistry.ts` (env-agnostic, parameterised over an injected `Store`) is adapted to the browser (WebMCP via `webmcpTools.ts`) and to Node (MCP via `server/mcp-server.ts`).
 
-- [x] Extract env-agnostic tool definitions into `src/lib/toolRegistry.ts`
-      (all 12 tools, parameterised over an injected `Store`).
-- [x] Add `src/lib/memoryStore.ts` — in-memory `Store` for the Node bridge
-      (no `localStorage`/`document`), mirroring the browser store's generated
-      metadata.
-- [x] `server/mcp-server.ts` — MCP server (stdio) exposing all 12 tools;
-      `createPortalServer()` builds it (testable), `main()` runs only as entry.
-- [x] Add `tsconfig.server.json` + project reference so `npm run build`
-      type-checks the server too.
-- [x] Add `npm run mcp` script.
-- [x] Verify `tools/list` returns the 12 registered tools (title, description,
-      JSON schema, readOnly annotations).
-- [x] Verify `tools/call` on `fir.fill_field` → `validate_form` → `submit`
-      mutates the shared registry's store (in-memory here; the browser uses the
-      same registry against localStorage).
-- [x] Tests: `src/test/mcpBridge.test.ts` (3 tests).
-- [ ] Optional: add a short bridge-demo segment to the video IF it stabilizes.
-
-## 🧹 Tool-context quality (WebMCP Leverage polish)
-
-Improve how an agent perceives the tools — scope is modest and self-contained
-in `src/lib/webmcpTools.ts`:
-
-- [x] Consider adding a `title` to each tool (Chrome shows it as the browser
-      UI label; the docs list `title` as a `ModelContextTool` field).
-- [x] Review each `description` for agent-actionability (see this session's
-      assessment below) — short, outcome-oriented, "given X do Y".
-- [x] Cross-reference the schema `description`s with `formSchema.json` labels
-      so agents map human field names <-> dotted paths.
-- [x] Keep total `description` concise (< 128 char target where sensible) so
-      discovery payloads stay small.
-
----
+- [x] `src/lib/toolRegistry.ts` — env-agnostic definitions for all 12 tools
+- [x] `src/lib/memoryStore.ts` — in-memory `Store` (no localStorage/document), mirrors browser metadata
+- [x] `server/mcp-server.ts` — stdio MCP server; `createPortalServer()` testable, `main()` runs only as entry
+- [x] `tsconfig.server.json` project reference — `npm run build` type-checks the server
+- [x] `npm run mcp` script
+- [x] Verified `tools/list` (12 tools + schema + readOnly) and `tools/call` (`fill_field` → `validate_form` → `submit`)
+- [x] Tests: `src/test/mcpBridge.test.ts` (3 tests)
+- [ ] Optional: add a short bridge-demo segment to the video
 
 ## 🧭 Notes / Decisions
-- **Versions (Aug 2026)**: React 19 + Vite 9.2.0 + TailwindCSS 4.3.3 + Zustand 5.x
-- **Shared model**: Design `incidentStore.js` incident schema first — reused by all modules
-- **Tool namespacing**: Use `.` separators (`fir.fill_field`, `challan.lookup_rc`) — WebMCP rejects `/` in tool names (`InvalidStateError: Invalid tool name`)
-- **Register all on mount**: `App.tsx` registers all 12 tools on first load (not per tab) so an agent sees the full surface immediately; registration is idempotent, so per-module calls stay safe no-ops.
-- **Origin isolation**: WebMCP requires a secure, **origin-keyed** document. Do NOT send `Origin-Agent-Cluster: ?0` (it opts out of origin-keying and disables WebMCP). Use the Chrome flag for localhost dev; Vercel handles prod HTTPS.
+- **Shared model**: single `incidentStore` incident schema reused by all modules
+- **Tool namespacing**: `.` separators — WebMCP rejects `/` in tool names (`InvalidStateError`)
+- **Register all on mount**: all 12 tools on first load (not per tab); idempotent, so per-module calls are safe no-ops
+- **Origin isolation**: WebMCP needs a secure, origin-keyed document; do NOT send `Origin-Agent-Cluster: ?0`. Chrome flag for localhost dev; prod Vercel HTTPS.
+- **Shared tool logic**: one `toolRegistry.ts` powers both the browser WebMCP surface and the Node MCP bridge — identical behavior
