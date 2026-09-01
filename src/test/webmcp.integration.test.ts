@@ -16,10 +16,11 @@ const SCHEMA_SECTIONS = (schemaJson as { sections: S[] }).sections
 
 /** Mirror of the tool's derivation: required fields in always-visible sections. */
 function requiredNowFromSchema(): string[] {
-  return SCHEMA_SECTIONS.filter((s) => !s.dependsOn)
-    .flatMap((s) => s.fields)
-    .filter((f) => f.required)
-    .map((f) => f.name)
+  const fields = SCHEMA_SECTIONS.filter((s) => !s.dependsOn).flatMap((s) => s.fields) as Array<{ name: string; required?: boolean; requiredWhen?: { field: string; isEmpty: boolean } }>
+  return [
+    ...fields.filter((f) => f.required).map((f) => f.name),
+    ...fields.filter((f) => f.requiredWhen?.isEmpty).map((f) => f.name), // fresh incident has no accused.name
+  ]
 }
 
 beforeEach(clearStore)
@@ -98,6 +99,8 @@ describe('fir.* tools integrate with incidentStore', () => {
       field: 'offense.sections',
       value: ['379'],
     })
+    await tools['fir.fill_field'].execute({ field: 'property', value: ['Hero Splendor'] })
+    await tools['fir.fill_field'].execute({ field: 'accused.name', value: 'Unknown' })
     await tools['fir.fill_field'].execute({ field: 'narrative', value: 'Bike stolen while parked' })
 
     const validation = JSON.parse((await tools['fir.validate_form'].execute({})) as string)

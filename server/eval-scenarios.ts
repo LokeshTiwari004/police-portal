@@ -86,17 +86,20 @@ async function main() {
     pass: new Set(names).size === names.length,
   })
 
-  // 3. E2E fill -> validate -> submit (valid)
+  // 3. E2E fill -> validate -> submit (valid, full form incl. conditional section)
   await call('fir.fill_field', { field: 'complainant.name', value: 'Alice' })
   await call('fir.fill_field', { field: 'complainant.phone', value: '9876543210' })
   await call('fir.fill_field', { field: 'narrative', value: 'Bike stolen while parked at market' })
+  await call('fir.fill_field', { field: 'offense.sections', value: ['379'] })
+  await call('fir.fill_field', { field: 'property', value: ['Hero Splendor (black)'] })
+  await call('fir.fill_field', { field: 'accused.name', value: 'Unknown' })
   const valid = await parsed('fir.validate_form', {})
   const submit = await parsed('fir.submit', {})
   rows.push({
     metric: 'E2E fill->validate->submit',
-    target: 'valid === true, submit ok',
-    actual: `valid=${valid.valid}, submit=${submit.ok}`,
-    pass: valid.valid === true && submit.ok === true,
+    target: 'valid === true, submit ok + full contract (id/status)',
+    actual: `valid=${valid.valid}, submit=${submit.ok}, id=${!!submit.id}, status=${submit.status}`,
+    pass: valid.valid === true && submit.ok === true && !!submit.id && !!submit.status,
   })
 
   // 4. Robustness: new incomplete form is rejected (fresh isolated session so the
@@ -110,12 +113,30 @@ async function main() {
   await roCall('fir.fill_field', { field: 'complainant.name', value: 'Bob' })
   const invalid = await roParsed('fir.validate_form', {})
   const roSubmit = await roParsed('fir.submit', {})
-  await ro.close()
   rows.push({
-    metric: 'Robustness: invalid form rejected',
+    metric: 'Robustness: missing required fields rejected',
     target: 'validate false + submit rejected with errors',
     actual: `valid=${invalid.valid}, errorKeys=${Object.keys(invalid.errors ?? {}).length}, submitOk=${roSubmit.ok}`,
     pass: invalid.valid === false && Object.keys(invalid.errors ?? {}).length > 0 && roSubmit.ok === false,
+  })
+
+  // 4b. Format parity: bad phone + bad email must surface as errors (live-portal FAIL fix)
+  const ro2 = await newClient()
+  const ro2Call = async (name: string, args: Record<string, unknown>) => {
+    const res = await ro2.client.callTool({ name, arguments: args })
+    return textOf(res)
+  }
+  const ro2Parsed = async (name: string, args: Record<string, unknown>) => JSON.parse((await ro2Call(name, args)) as string)
+  await ro2Call('fir.fill_field', { field: 'complainant.name', value: 'Carol' })
+  await ro2Call('fir.fill_field', { field: 'complainant.phone', value: '123' })
+  await ro2Call('fir.fill_field', { field: 'complainant.email', value: 'not-an-email' })
+  const fmt = await ro2Parsed('fir.validate_form', {})
+  await ro2.close()
+  rows.push({
+    metric: 'Format parity (phone/email)',
+    target: 'invalid phone 123 + email not-an-email both reported',
+    actual: `phoneErr=${!!fmt.errors?.['complainant.phone']}, emailErr=${!!fmt.errors?.['complainant.email']}`,
+    pass: !!fmt.errors?.['complainant.phone'] && !!fmt.errors?.['complainant.email'],
   })
 
   // 5. Conditional reveal on offense section (property required)
@@ -127,7 +148,20 @@ async function main() {
     pass: Array.isArray(reveal.hiddenWhenRevealed) && reveal.hiddenWhenRevealed.includes('property'),
   })
 
-  // 6. Cross-module state continuity (same record through dispatch)
+  // 6. Cross-module continuity: challan persisted onto the SAME FIR
+  const challan = await parsed('challan.submit', {
+    rcNumber: 'UP14C1234',
+    offenseCode: '119',
+    fineAmount: 500,
+  })
+  rows.push({
+    metric: 'Challan linked to FIR',
+    target: 'challan.submit returns same firNumber + persisted challan',
+    actual: `firNumber=${challan.firNumber} (expected ${submit.firNumber}), challan=${!!challan.challan?.rcNumber}`,
+    pass: challan.ok === true && challan.firNumber === submit.firNumber && !!challan.challan?.rcNumber,
+  })
+
+  // 7. Cross-module state continuity (same record through dispatch)
   await call('dispatch.classify_nature', { description: 'car collision on the road' })
   const units = await parsed('dispatch.get_available_units', {})
   const unitId = units.units?.[0]?.id
@@ -162,7 +196,7 @@ async function main() {
     '|---|---|---|---|',
     ...rows.map((r) => `| ${r.metric} | ${r.target} | ${r.actual} | ${r.pass ? 'PASS' : 'FAIL'} |`),
     '',
-    '> Deterministic (no LLM/LLM thought, no browser). Covers the automation-drivable',
+    '> Deterministic (no LLM, no browser). Covers the automation-drivable',
     '> subset of the hackathon eval metrics over the MCP surface. The live-browser',
     '> WebMCP surface (UI reflection, metrics tab, dual editing) is covered separately',
     '> by the live-portal driver prompt in `docs/LIVE_PORTAL_EVAL.md`.',

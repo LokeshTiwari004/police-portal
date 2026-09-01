@@ -10,7 +10,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - `npm run test:watch` — vitest watch mode
 - `npm run test:coverage` — run with v8 coverage report
 - `npm run mcp` — run the external-agent MCP bridge (`tsx server/mcp-server.ts`, stdio)
-- `npm run eval` — run the MCP eval harness (`tsx server/eval-scenarios.ts`): drives a real MCP Client against `createPortalServer` over the in-memory transport, runs the hackathon eval scenarios, and rewrites `docs/EVAL_RESULTS.md` (currently 7/7 PASS).
+- `npm run eval` — run the MCP eval harness (`tsx server/eval-scenarios.ts`): drives a real MCP Client against `createPortalServer` over the in-memory transport, runs the hackathon eval scenarios, and rewrites `docs/EVAL_RESULTS.md` (currently 9/9 PASS).
 - Run ONE test file: `npx vitest run src/lib/validation.test.ts`
 - Run tests matching a name: `npx vitest run -t "fill_field"`
 
@@ -20,7 +20,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - `/server/mcp-server.ts` — **external-agent MCP bridge** over the same `toolRegistry.ts` definitions. `createPortalServer()` builds an `McpServer` with an in-memory store (testable); `main()` runs only when invoked as the entry point. Run via `npm run mcp`; point any MCP client (Claude Desktop / VS Code) at it. Type-checked by `tsconfig.server.json` (bundler resolution, node types) in `tsc -b`.
 - `/src/lib/memoryStore.ts` — in-memory `Store<Incident>` for the bridge (no `localStorage`/`document`), mirroring the browser store's generated id/firNumber/createdAt/status.
 - `/src/lib/incidentStore.ts` — browser's shared, localStorage-backed store for ALL modules (key `police-portal:incidents`). Reuse it; don't build per-module storage. Incident schema is the shared contract across FIR/challan/dispatch. Note: `create()`'s param type requires `offense`, `accused`, `narrative` even though runtime defaults exist — pass a full object or omit the arg entirely.
-- `/src/lib/validation.ts` — validation shared by both UI and tools so the agent's view matches the form. `formSchema.json` drives conditional field visibility/requirements.
+- `/src/lib/validation.ts` — validation shared by both UI and tools. `validateIncident(incident, sections)` is the **single parity source**: it computes the exact per-field errors the form shows (visible sections + `required`/`requiredWhen` + `rule`), used by BOTH `FIRForm` and the `fir.*` tools. `formSchema.json` drives conditional visibility/requirements. NOTE: `getChallanTools(store)` now takes a `Store` (signature changed when `challan.submit` became real).
 - `/src/data/formSchema.json`, `offenseCodes.json`, `mockIncidents.json`, `mockRC.json`, `mvaFines.json`, `natureCodes.json` — static mock data. `mockIncidents.json` seeds `fir.find_similar_cases` (6 NCRB-style cases); `mockRC.json` seeds `challan.lookup_rc`; `mvaFines.json` drives `challan.auto_calculate_fine`; `natureCodes.json` drives `dispatch.classify_nature`. They are read in `toolRegistry.ts`.
 - `/src/components/` and `/src/utils/` are empty — the plan (`docs/WebMCP_Police_Portal_ImplementationPlan.md`) expects `FIRForm`, `ChallanGenerator`, `DispatchConsole`, `classifier.js`, `mockApi.js` here. FIR form UI isn't built yet; only the FIR tab has stub content in `App.tsx`.
 

@@ -1,33 +1,55 @@
-import { useState } from 'react'
-import { incidentStore } from '../lib/incidentStore'
+import { useEffect, useState } from 'react'
+import { incidentStore, type Incident } from '../lib/incidentStore'
+import mockRC from '../data/mockRC.json'
+import mvaFines from '../data/mvaFines.json'
+
+interface RcRecord {
+  rcNumber: string
+  ownerName: string
+  address: string
+  vehicleClass: string
+  makerModel?: string
+  engineCapacity?: string
+  fuelType?: string
+}
+interface FineMatrix {
+  offences: Array<{ offenseCode: string; label: string; baseFine: number }>
+  vehicleClassMultiplier: Record<string, number>
+  defaultFine: number
+  defaultMultiplier: number
+}
+
+const RC_DB = mockRC as RcRecord[]
+const FINE_MATRIX = mvaFines as FineMatrix
+
+function fineFor(offenseCode: string, vehicleClass: string): number {
+  const off = FINE_MATRIX.offences.find((o) => o.offenseCode === offenseCode)
+  const mult = FINE_MATRIX.vehicleClassMultiplier[vehicleClass] ?? FINE_MATRIX.defaultMultiplier
+  return Math.round((off?.baseFine ?? FINE_MATRIX.defaultFine) * mult)
+}
 
 /**
  * e-Challan generator: looks up a vehicle RC and auto-calculates MVA fines,
  * linking the challan back to a FIR incident in the shared store.
- * Mirrors the challan/* WebMCP tools so the agent and the UI agree.
+ * Reads the SAME mockRC.json / mvaFines.json the challan/* tools use, and
+ * subscribes to the store so a challan created by an agent tool appears live.
  */
-
-const RC_DB: Record<string, { ownerName: string; address: string; vehicleClass: string; engineCc: number; fuelType: string }> = {
-  UP14C1234: { ownerName: 'Rajesh Kumar', address: '123 MG Road, Lucknow', vehicleClass: 'MCWG', engineCc: 110, fuelType: 'Petrol' },
-  DL8CAF2291: { ownerName: 'Priya Sharma', address: '44 Civil Lines, Delhi', vehicleClass: 'LMV', engineCc: 1498, fuelType: 'Petrol' },
-  KA01MJ0555: { ownerName: 'Arjun Nair', address: '5th Block, Bengaluru', vehicleClass: 'LMV', engineCc: 1996, fuelType: 'Diesel' },
-  MH12DE1433: { ownerName: 'Sneha Joshi', address: 'Pune Station Rd', vehicleClass: 'HMV', engineCc: 6200, fuelType: 'Diesel' },
-  GJ01BU1122: { ownerName: 'Rohan Desai', address: 'Navrangpura, Ahmedabad', vehicleClass: 'MCWG', engineCc: 125, fuelType: 'Petrol' },
-}
-
-const FINE_BASE: Record<string, number> = { 119: 1000, 123: 1000, 126: 5000, 143: 5000, 180: 2000, 194: 10000 }
-const VEHICLE_MULT: Record<string, number> = { LMV: 1, MCWG: 0.5, HMV: 1.5, Bus: 1.2 }
-
 export default function ChallanGenerator() {
+  const [incident, setIncident] = useState<Incident | undefined>(() => incidentStore.list()[0])
   const [rcNumber, setRcNumber] = useState('')
-  const [rc, setRc] = useState<(typeof RC_DB)[string] | null>(null)
+  const [rc, setRc] = useState<RcRecord | null>(null)
   const [lookedUp, setLookedUp] = useState('')
   const [offenseCode, setOffenseCode] = useState('180')
   const [fine, setFine] = useState<number | null>(null)
-  const [savedId, setSavedId] = useState('')
+
+  useEffect(() => {
+    return incidentStore.subscribe((incidents) => setIncident(incidents[0]))
+  }, [])
+
+  const saved = incident?.challan
 
   function lookupRc() {
-    const rec = RC_DB[rcNumber.toUpperCase().trim()]
+    const rec = RC_DB.find((r) => r.rcNumber.toUpperCase() === rcNumber.toUpperCase().trim())
     setRc(rec ?? null)
     setLookedUp(rcNumber.toUpperCase().trim())
     setFine(null)
@@ -35,22 +57,19 @@ export default function ChallanGenerator() {
 
   function calcFine() {
     if (!rc) return
-    const base = FINE_BASE[offenseCode] ?? 500
-    setFine(Math.round(base * (VEHICLE_MULT[rc.vehicleClass] ?? 1)))
+    setFine(fineFor(offenseCode, rc.vehicleClass))
   }
 
   function submitChallan() {
-    if (!rc || fine == null) return
-    const inc = incidentStore.list()[0] || incidentStore.create()
+    const inc = incident ?? incidentStore.create()
     incidentStore.update(inc.id, {
       challan: {
         rcNumber: lookedUp,
         offenseCode,
-        fineAmount: fine,
+        fineAmount: fine ?? 0,
         paid: false,
       },
     })
-    setSavedId(inc.firNumber)
   }
 
   return (
@@ -62,6 +81,7 @@ export default function ChallanGenerator() {
             <input
               value={rcNumber}
               onChange={(e) => setRcNumber(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && lookupRc()}
               placeholder="e.g. UP14C1234"
               className="flex-1 rounded border border-slate-300 px-3 py-2 text-sm"
             />
@@ -72,8 +92,9 @@ export default function ChallanGenerator() {
           {lookedUp && rc && (
             <dl className="mt-3 text-sm">
               <Row k="Owner" v={rc.ownerName} />
+              <Row k="Model" v={rc.makerModel ?? '—'} />
               <Row k="Class" v={rc.vehicleClass} />
-              <Row k="Engine" v={`${rc.engineCc} cc ${rc.fuelType}`} />
+              <Row k="Engine" v={`${rc.engineCapacity ?? ''} ${rc.fuelType ?? ''}`.trim()} />
             </dl>
           )}
           {lookedUp && !rc && <p className="mt-3 text-sm text-red-600">No record found for {lookedUp}.</p>}
@@ -87,8 +108,10 @@ export default function ChallanGenerator() {
             onChange={(e) => setOffenseCode(e.target.value)}
             className="rounded border border-slate-300 px-3 py-2 text-sm w-full"
           >
-            {Object.keys(FINE_BASE).map((s) => (
-              <option key={s} value={s}>Section {s}</option>
+            {FINE_MATRIX.offences.map((o) => (
+              <option key={o.offenseCode} value={o.offenseCode}>
+                Section {o.offenseCode} — {o.label}
+              </option>
             ))}
           </select>
           <button
@@ -104,14 +127,22 @@ export default function ChallanGenerator() {
 
       <section className="rounded border border-slate-200 p-4">
         <h3 className="font-semibold mb-2">3 · Issue challan</h3>
-        <button
-          onClick={submitChallan}
-          disabled={!rc || fine == null}
-          className="rounded bg-emerald-600 text-white px-4 py-2 text-sm disabled:opacity-40"
-        >
-          Save challan to incident
-        </button>
-        {savedId && <p className="mt-3 text-sm text-emerald-600">Challan linked to {savedId} (₹{fine}).</p>}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={submitChallan}
+            disabled={!rc || fine == null}
+            className="rounded bg-emerald-600 text-white px-4 py-2 text-sm disabled:opacity-40"
+          >
+            Save challan to incident
+          </button>
+          {incident && <span className="text-xs text-slate-500">Linked to {incident.firNumber}</span>}
+        </div>
+        {saved && (
+          <div className="mt-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">
+            Challan for <strong>{saved.rcNumber}</strong> · Section {saved.offenseCode} · ₹{saved.fineAmount}{' '}
+            on <strong>{incident?.firNumber}</strong>
+          </div>
+        )}
       </section>
     </div>
   )

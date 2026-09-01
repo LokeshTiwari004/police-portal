@@ -75,7 +75,7 @@ function registerToolOnServer(server: McpServer, tool: ToolDefinition) {
 /** Build an MCP server with all 12 portal tools registered against a fresh in-memory store. */
 export function createPortalServer(store: Store<Incident> = createMemoryStore()): { server: McpServer; store: Store<Incident> } {
   const server = new McpServer({ name: 'police-portal', version: '1.0.0' })
-  getFirTools(store).concat(getChallanTools(), getDispatchTools(store)).forEach((t) => registerToolOnServer(server, t))
+  getFirTools(store).concat(getChallanTools(store), getDispatchTools(store)).forEach((t) => registerToolOnServer(server, t))
   return { server, store }
 }
 

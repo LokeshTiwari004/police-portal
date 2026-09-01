@@ -8,7 +8,7 @@ import { getChallanTools, getDispatchTools } from '../lib/toolRegistry'
 import { createMemoryStore } from '../lib/memoryStore'
 
 function challan(name: string) {
-  return getChallanTools().find((t) => t.name === name)!
+  return getChallanTools(createMemoryStore()).find((t) => t.name === name)!
 }
 function dispatch(name: string) {
   return getDispatchTools(createMemoryStore()).find((t) => t.name === name)!

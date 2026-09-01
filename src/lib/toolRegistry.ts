@@ -41,7 +41,11 @@ interface SchemaSection {
 }
 
 import type { Incident } from './incidentStore'
-import { validateForm, requiredFieldsForSections } from './validation'
+import {
+  validateIncident,
+  isFieldRequired,
+  requiredFieldsForSections,
+} from './validation'
 import schemaJson from '../data/formSchema.json'
 import mockIncidents from '../data/mockIncidents.json'
 import mockRC from '../data/mockRC.json'
@@ -85,10 +89,10 @@ const NATURE_RULES = natureCodes as NatureRule[]
 const FIR_SCHEMA = (schemaJson as { sections: SchemaSection[] }).sections
 
 /** Fields required in always-visible sections (no dependsOn), derived from formSchema.json. */
-function requiredFieldsNow(): string[] {
+function requiredFieldsNow(incident: Incident): string[] {
   return FIR_SCHEMA.filter((s) => !s.dependsOn)
     .flatMap((s) => s.fields)
-    .filter((f) => f.required)
+    .filter((f) => f.required || isFieldRequired(f, incident))
     .map((f) => f.name)
 }
 
@@ -121,10 +125,11 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
         required: ['sections'],
       },
       execute: async ({ sections }) => {
+        const incident = store.list()[0] || store.create()
         const list = (sections as string[]) ?? []
         const hidden = requiredFieldsForSections(list)
         return JSON.stringify({
-          requiredNow: requiredFieldsNow(),
+          requiredNow: requiredFieldsNow(incident),
           hiddenWhenRevealed: hidden,
           tip: 'Use fir.fill_field to populate fields. Use fir.flag_missing to surface gaps.',
         })
@@ -214,13 +219,8 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       execute: async () => {
         const incident = store.list()[0] || store.create()
-        const flat: Record<string, unknown> = {
-          'complainant.name': incident.complainant.name,
-          'complainant.phone': incident.complainant.phone,
-          narrative: incident.narrative,
-        }
-        const { valid, errors } = validateForm(flat)
-        return JSON.stringify({ valid, errors, firNumber: incident.firNumber })
+        const { valid, errors } = validateIncident(incident, FIR_SCHEMA)
+        return JSON.stringify({ valid, errors, firNumber: incident.firNumber, id: incident.id })
       },
       annotations: { readOnlyHint: true },
     },
@@ -228,21 +228,23 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.submit',
       title: 'Submit the FIR',
       description:
-        'Submit the completed FIR after it passes validation. Persists the record.',
+        'Submit the completed FIR after it passes full-form validation. Rejects with ' +
+        'errors if any required field is missing/invalid. Returns the persisted record id, firNumber and status.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
       execute: async () => {
         const incident = store.list()[0]
         if (!incident) return JSON.stringify({ ok: false, error: 'No incident in progress' })
-        const { valid, errors } = validateForm({
-          'complainant.name': incident.complainant.name,
-          'complainant.phone': incident.complainant.phone,
-          narrative: incident.narrative,
-        })
+        const { valid, errors } = validateIncident(incident, FIR_SCHEMA)
         if (!valid) {
           return JSON.stringify({ ok: false, errors })
         }
-        store.update(incident.id, { status: 'acknowledged' })
-        return JSON.stringify({ ok: true, firNumber: incident.firNumber })
+        const updated = store.update(incident.id, { status: 'acknowledged' })
+        return JSON.stringify({
+          ok: true,
+          id: incident.id,
+          firNumber: incident.firNumber,
+          status: updated?.status ?? 'acknowledged',
+        })
       },
     },
     {
@@ -281,7 +283,7 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
   ]
 }
 
-export function getChallanTools(): ToolDefinition[] {
+export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
   return [
     {
       name: 'challan.lookup_rc',
@@ -325,9 +327,31 @@ export function getChallanTools(): ToolDefinition[] {
     {
       name: 'challan.submit',
       title: 'Submit traffic challan',
-      description: 'Finalize and persist a traffic challan.',
-      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      execute: async () => JSON.stringify({ ok: true, message: 'Challan persisted (stub)' }),
+      description:
+        'Persist a traffic challan onto the active FIR incident and return its firNumber. ' +
+        'Pass the rcNumber, offenseCode and fineAmount (from challan.lookup_rc / challan.auto_calculate_fine) ' +
+        'so the challan is cross-linked to the incident.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          rcNumber: { type: 'string', description: 'Vehicle registration number from challan.lookup_rc.' },
+          offenseCode: { type: 'string', description: 'MVA section code used to compute the fine.' },
+          fineAmount: { type: 'number', description: 'Fine in rupees from challan.auto_calculate_fine.' },
+        },
+      },
+      execute: async ({ rcNumber, offenseCode, fineAmount }) => {
+        const incident = store.list()[0]
+        if (!incident) return JSON.stringify({ ok: false, error: 'No incident in progress' })
+        const updated = store.update(incident.id, {
+          challan: {
+            rcNumber: String(rcNumber ?? ''),
+            offenseCode: String(offenseCode ?? ''),
+            fineAmount: Number(fineAmount ?? 0),
+            paid: false,
+          },
+        })
+        return JSON.stringify({ ok: true, id: incident.id, firNumber: incident.firNumber, challan: updated?.challan })
+      },
     },
   ]
 }

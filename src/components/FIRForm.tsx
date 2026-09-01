@@ -1,37 +1,11 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { incidentStore, type Incident } from '../lib/incidentStore'
-import { validateField } from '../lib/validation'
+import { validateIncident, isFieldRequired, isSectionVisible, getValue, type ValidationSection, type ValidationField } from '../lib/validation'
 import schemaJson from '../data/formSchema.json'
 
 type FieldType = 'text' | 'textarea' | 'tel' | 'email' | 'date' | 'time' | 'number' | 'select' | 'multiselect' | 'repeat' | 'richtext'
 
-interface Field {
-  name: string
-  label: string
-  type: string
-  required?: boolean
-  rule?: string
-  options?: Array<{ value: string; label: string }> | string[]
-  requiredWhen?: { field: string; isEmpty: boolean }
-}
-
-interface Section {
-  id: string
-  label: string
-  description?: string
-  dependsOn?: { field: string; includeAny: string[] }
-  fields: Field[]
-}
-
-const sections = (schemaJson as { sections: Section[] }).sections
-
-/** Read a dotted path off an incident, e.g. getValue(inc, 'complainant.name'). */
-function getValue(inc: Incident, path: string): unknown {
-  return path.split('.').reduce<unknown>((acc, part) => {
-    if (acc == null || typeof acc !== 'object') return undefined
-    return (acc as Record<string, unknown>)[part]
-  }, inc)
-}
+const sections = (schemaJson as { sections: ValidationSection[] }).sections
 
 /** Return a shallow copy of the incident with a dotted path set. */
 function setValue(inc: Incident, path: string, value: unknown): Incident {
@@ -45,35 +19,6 @@ function setValue(inc: Incident, path: string, value: unknown): Incident {
   }
   ref[parts[parts.length - 1]] = value
   return root as unknown as Incident
-}
-
-/** Section is visible when its dependsOn.includeAny intersects selected sections. */
-function isSectionVisible(section: Section, incident: Incident): boolean {
-  if (!section.dependsOn) return true
-  const fieldVal = getValue(incident, section.dependsOn.field)
-  const selected = Array.isArray(fieldVal) ? (fieldVal as string[]) : []
-  return selected.some((s) => section.dependsOn!.includeAny.includes(s))
-}
-
-function isFieldRequired(field: Field, incident: Incident): boolean {
-  if (field.required) return true
-  if (field.requiredWhen?.isEmpty) {
-    const val = getValue(incident, field.requiredWhen.field)
-    return val == null || String(val).trim() === ''
-  }
-  return false
-}
-
-function fieldError(field: Field, incident: Incident): string | null {
-  const value = getValue(incident, field.name)
-  const required = isFieldRequired(field, incident)
-  if (required && (value == null || (Array.isArray(value) ? value.length === 0 : String(value).trim() === ''))) {
-    return 'This field is required.'
-  }
-  if (field.rule && value != null && value !== '') {
-    return validateField(field.rule, value)
-  }
-  return null
 }
 
 export default function FIRForm() {
@@ -94,26 +39,20 @@ export default function FIRForm() {
     [incident],
   )
 
-  const errors = useMemo(() => {
-    const out: Record<string, string> = {}
-    for (const section of visibleSections) {
-      for (const field of section.fields) {
-        const err = fieldError(field, incident)
-        if (err) out[field.name] = err
-      }
-    }
-    return out
-  }, [incident, visibleSections])
+  const errors = useMemo(
+    () => validateIncident(incident, sections).errors,
+    [incident],
+  )
 
   const errorCount = Object.keys(errors).length
 
-  function handleChange(field: Field, value: unknown) {
+  function handleChange(field: ValidationField, value: unknown) {
     const updated = setValue(incident, field.name, value)
     incidentStore.update(incident.id, updated)
     setIncident(updated)
   }
 
-  function renderField(field: Field, sectionId: string): ReactNode {
+  function renderField(field: ValidationField, sectionId: string): ReactNode {
     const value = getValue(incident, field.name)
     const err = errors[field.name]
     const inputClass =

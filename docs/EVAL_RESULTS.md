@@ -1,16 +1,18 @@
 # EVAL RESULTS — external-agent MCP harness
 
-Run: 2026-09-01T09:12:36.159Z
+Run: 2026-09-01T10:21:49.196Z
 Surface: real MCP Client <-> createPortalServer (same server as `npm run mcp`)
-Result: **7/7 PASS** — all green
+Result: **9/9 PASS** — all green
 
 | Metric | Target | Actual | Result |
 |---|---|---|---|
 | Tool discovery (6/3/3) | 12 tools listed | 12 tools | PASS |
 | No duplicate tools | 0 duplicates | 0 duplicates | PASS |
-| E2E fill->validate->submit | valid === true, submit ok | valid=true, submit=true | PASS |
-| Robustness: invalid form rejected | validate false + submit rejected with errors | valid=false, errorKeys=2, submitOk=false | PASS |
+| E2E fill->validate->submit | valid === true, submit ok + full contract (id/status) | valid=true, submit=true, id=true, status=acknowledged | PASS |
+| Robustness: missing required fields rejected | validate false + submit rejected with errors | valid=false, errorKeys=4, submitOk=false | PASS |
+| Format parity (phone/email) | invalid phone 123 + email not-an-email both reported | phoneErr=true, emailErr=true | PASS |
 | Conditional reveal (theft -> property) | property in hiddenWhenRevealed | hidden=[property] | PASS |
+| Challan linked to FIR | challan.submit returns same firNumber + persisted challan | firNumber=FIR-2025-000001 (expected FIR-2025-000001), challan=true | PASS |
 | Cross-module flow (dispatch assigned) | unit assigned | units=3, assignedUnit=AMB-147 | PASS |
 | Per-tool latency (avg) | low (in-process) | 0.2ms | PASS |
 

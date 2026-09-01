@@ -14,8 +14,8 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 - [x] `vercel.json` SPA rewrite → `index.html`
 - [x] Project linked + deployed (auto-deploy from `main`)
 - [x] Production URL live: `https://police-portal-mu.vercel.app/` (HTTPS, origin-keyed)
-- [ ] Verify WebMCP on the Vercel URL in Chrome — Application → WebMCP shows all 12 tools under "Available Tools" (no chrome flag needed on HTTPS prod) — run `docs/LIVE_PORTAL_EVAL.md` Part A
-- [ ] Drive the tools on prod with the Model Context Tool Inspector extension (Metrics tab counts calls) — run `docs/LIVE_PORTAL_EVAL.md` Part E
+- [x] Verify WebMCP on the Vercel URL — live agent run confirmed header "12 WebMCP tools live", exactly 12 distinct tools listed, no duplicates, badge count stable across all tab switches, zero console errors/warnings. (DevTools→Application→WebMCP panel itself was BLOCKED — the in-app browser exposes no DevTools; 12-tool surface verified via the agent's tool fetch.) `docs/LIVE_PORTAL_EVAL.md` Part A
+- [~] Drive the tools on prod with the Model Context Tool Inspector extension (Metrics tab counts calls) — Part A–F live run done (11 PASS / 7 FAIL / 1 BLOCKED); all 7 FAILs fixed in this change — re-run to confirm `docs/LIVE_PORTAL_EVAL.md` Part E
 
 ## 📄 Must-Have: FIR Copilot
 
@@ -28,6 +28,7 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 ### Validation
 - [x] `lib/validation.ts` — `validateField` + `validateForm` + `requiredFieldsForSections`
 - [x] Fix `validation.ts` `'narative'` typo; `narrative` required (pinned by `validation.test.ts`)
+- [x] **Validation parity by construction** — new `validateIncident(incident, sections)` in `validation.ts` mirrors the form's per-field rules (visible sections + `required`/`requiredWhen` + `rule`) and is used by BOTH `FIRForm` and the `fir.*` tools. Live-portal FAIL (tools only checked a 3-field subset; format rules never fired on dotted paths) fixed and pinned by `mcpBridge.test.ts` + eval harness.
 
 ### UI
 - [x] `App.tsx` — dashboard shell, registers all 12 tools on mount
@@ -48,9 +49,9 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 - [x] `data/mockRC.json` — Vahan-style vehicle records; `challan.lookup_rc` reads it (found / not-found)
 
 ### UI + Tools
-- [x] `components/ChallanGenerator.tsx`
+- [x] `components/ChallanGenerator.tsx` — now reads the same `mockRC.json` / `mvaFines.json` as the tools and subscribes to the store (agent-created challans reflect live)
 - [x] Tools: `challan.lookup_rc`, `challan.auto_calculate_fine`, `challan.submit`
-- [ ] Test: create challan from an existing FIR incident (cross-module integration)
+- [x] Cross-module challan: `challan.submit` is real — persists the challan onto the active incident's `.challan` and returns its `firNumber` (live-portal FAIL "Challan persisted (stub)" fixed; pinned by `mcpBridge.test.ts` + eval harness)
 
 ## 🎯 Stretch Goal: ERSS-112 Dispatch
 
@@ -65,21 +66,22 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 ## 🎬 System Testing & Evaluation Metrics (Hackathon)
 
 ### Correctness (full-stack WebMCP flow works)
-- [x] End-to-end success — fill → validate → submit; covered by `webmcp.integration.test.ts` + `mcpBridge.test.ts`
-- [x] Validation parity — `fir.validate_form` == FIRForm UI errors (parity test)
+- [x] End-to-end success — fill → validate → submit; covered by `webmcp.integration.test.ts` + `mcpBridge.test.ts` + eval harness (submit returns full contract: id / firNumber / status)
+- [x] Validation parity — `fir.validate_form` == FIRForm UI errors by construction (`validateIncident` is the single shared source)
 - [ ] Demo artifact: screencast of the live flow
 
 ### Robustness
-- [~] Round-trip cases — MCP harness covers missing-required reject + submit refused; browser-side invalid phone/email/date + conditional `requiredWhen` + empty narrative + no-incident still to verify via `docs/LIVE_PORTAL_EVAL.md`
+- [~] Round-trip cases — MCP harness + `mcpBridge.test.ts` now cover missing-required reject, invalid phone/email, conditional `requiredWhen`, `submit` refused on invalid; browser-only date/time + no-incident + empty-narrative remain to re-verify via `docs/LIVE_PORTAL_EVAL.md`
 - [x] Graceful degradation — no `document.modelContext` → App shows "WebMCP tools pending"
 
 ### Agent Collaboration
 - [x] Tool discovery completeness — all 12 register on first load (`App.test.tsx` + MCP harness `tools/list`)
-- [x] State continuity — shared `incidentStore` across modules; MCP harness assigns dispatch on the same record (sub-ms round-trip)
+- [x] State continuity — shared `incidentStore` across modules; MCP harness links challan + dispatch assignment to the same FIR record (`firNumber` continuity)
 
 ### Performance / UX
 - [x] No duplicate tools on re-registration (idempotent claim-before-register; MCP harness reports 0 dupes)
-- [ ] No console errors during a full agent-driven session (manual QA — see `docs/LIVE_PORTAL_EVAL.md` Part A)
+- [x] No console errors during a full agent-driven session — live run confirmed 0 errors / 0 warnings (TODO Part A)
+- [x] Metrics scorecard — per-module breakdown (FIR / e-Challan / ERSS-112 calls + distinct tools) and live validation-parity stat added (live-portal FAIL "no per-module breakdown / parity section" fixed)
 
 ### Judges' walkthrough checklist (demo script)
 - [x] Human + agent on same live form (dual editing)

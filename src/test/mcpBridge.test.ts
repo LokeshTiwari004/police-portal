@@ -25,6 +25,9 @@ describe('external-agent MCP bridge', () => {
 
     await tools['fir.fill_field'].execute({ field: 'complainant.name', value: 'Alice' })
     await tools['fir.fill_field'].execute({ field: 'complainant.phone', value: '9876543210' })
+    await tools['fir.fill_field'].execute({ field: 'offense.sections', value: ['379'] })
+    await tools['fir.fill_field'].execute({ field: 'property', value: ['Bike'] })
+    await tools['fir.fill_field'].execute({ field: 'accused.name', value: 'Unknown' })
     await tools['fir.fill_field'].execute({ field: 'narrative', value: 'Bike stolen' })
 
     const validation = JSON.parse((await tools['fir.validate_form'].execute({})) as string)
@@ -45,7 +48,7 @@ describe('external-agent MCP bridge', () => {
       'fir.submit',
       'fir.find_similar_cases',
     ])
-    expect(getChallanTools().map((t) => t.name)).toEqual([
+    expect(getChallanTools(createMemoryStore()).map((t) => t.name)).toEqual([
       'challan.lookup_rc',
       'challan.auto_calculate_fine',
       'challan.submit',
@@ -55,5 +58,50 @@ describe('external-agent MCP bridge', () => {
       'dispatch.get_available_units',
       'dispatch.assign_unit',
     ])
+  })
+
+  it('challan.submit persists onto the active FIR and returns its firNumber (cross-module continuity)', async () => {
+    const store = createMemoryStore()
+    const tools = Object.fromEntries([
+      ...getFirTools(store),
+      ...getChallanTools(store),
+    ].map((t) => [t.name, t]))
+
+    await tools['fir.fill_field'].execute({ field: 'complainant.name', value: 'Alice' })
+    await tools['fir.fill_field'].execute({ field: 'complainant.phone', value: '9876543210' })
+    await tools['fir.fill_field'].execute({ field: 'offense.sections', value: ['379'] })
+    await tools['fir.fill_field'].execute({ field: 'property', value: ['Bike'] })
+    await tools['fir.fill_field'].execute({ field: 'accused.name', value: 'Unknown' })
+    await tools['fir.fill_field'].execute({ field: 'narrative', value: 'Stolen' })
+    const fir = JSON.parse((await tools['fir.submit'].execute({})) as string)
+    expect(fir.ok).toBe(true)
+
+    const challan = JSON.parse(
+      (await tools['challan.submit'].execute({ rcNumber: 'UP14C1234', offenseCode: '119', fineAmount: 500 })) as string,
+    )
+    expect(challan.ok).toBe(true)
+    expect(challan.firNumber).toBe(fir.firNumber)
+    expect(challan.challan).toMatchObject({ rcNumber: 'UP14C1234', offenseCode: '119', fineAmount: 500 })
+    expect(store.list()[0].challan).toMatchObject({ rcNumber: 'UP14C1234', fineAmount: 500 })
+  })
+
+  it('fir.validate_form matches the UI: bad phone/email + empty accused.description are errors', async () => {
+    const store = createMemoryStore()
+    const tools = Object.fromEntries(getFirTools(store).map((t) => [t.name, t]))
+
+    await tools['fir.fill_field'].execute({ field: 'complainant.name', value: 'Bob' })
+    await tools['fir.fill_field'].execute({ field: 'complainant.phone', value: '123' })
+    await tools['fir.fill_field'].execute({ field: 'complainant.email', value: 'not-an-email' })
+    await tools['fir.fill_field'].execute({ field: 'narrative', value: 'Test' })
+
+    const { valid, errors } = JSON.parse((await tools['fir.validate_form'].execute({})) as string)
+    expect(valid).toBe(false)
+    expect(errors['complainant.phone']).toBe('Phone must be a 10-digit number (e.g. 9876543210).')
+    expect(errors['complainant.email']).toBe('Enter a valid email address.')
+    expect(errors['accused.description']).toBe('This field is required.')
+    expect(errors['offense.sections']).toBe('This field is required.')
+
+    const submit = JSON.parse((await tools['fir.submit'].execute({})) as string)
+    expect(submit.ok).toBe(false)
   })
 })

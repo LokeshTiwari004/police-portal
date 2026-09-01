@@ -77,22 +77,51 @@ Per metric: target / actual / evidence → recorded in this doc's status table (
 
 | Metric | Target | Actual | Evidence |
 |---|---|---|---|
-| Tool discovery (6/3/3) | all present | 12 shown under DevTools→Application→WebMCP | vitest + DevTools |
-| No duplicate tools | 0 dupes | 0 | vitest + MCP harness |
-| E2E fill→validate→submit | 1 pass ≤60s | observed: extension agent drove 12 tool calls (Metrics tab counts) | vitest + extension |
-| Validation parity | 100% | 2 cases green (`src/test/parity.test.tsx`) | parity corpus |
-| Cross-module same record | id/firNumber stable | — | vitest |
+| Tool discovery (6/3/3) | all present | 12 shown under DevTools→Application→WebMCP | vitest + live run (12 distinct, no dupes) |
+| No duplicate tools | 0 dupes | 0 | vitest + MCP harness + live run |
+| E2E fill→validate→submit | 1 pass ≤60s | live agent ran full flow; 22 tool calls on Metrics page | vitest + live run |
+| Validation parity | 100% | `fir.validate_form` == UI by construction (`validateIncident` shared); live-run FAILs (3-field subset, format rules never firing) fixed | `validateIncident` + `mcpBridge.test.ts` + eval harness |
+| Cross-module same record | id/firNumber stable | challan + dispatch assignment link to same FIR `firNumber` | MCP harness 9/9 + `mcpBridge.test.ts` |
 | LCP / INP / CLS | ≤1.5s / ≤120ms / ≤0.05 | — | Lighthouse |
 | Demo video | <3min, audio | — | YouTube |
+
+### Live-portal agent run (manual, browser-only evidence)
+
+A Codex in-app browser agent ran `docs/LIVE_PORTAL_EVAL.md` against the Vercel origin and
+reported **11 PASS / 7 FAIL / 1 BLOCKED**. PASSes: 12 tools live, idempotent across tab
+switches, zero console errors/warnings, FIR live fills, IPC-379 conditional reveal, RC
+lookup, fine calc, dispatch classification/units/continuity, Metrics live telemetry (22
+calls). The 7 FAILs were real bugs and all are fixed in the current commit:
+
+1. `fir.identify_required_fields` missing conditional `accused.description` → now
+   evaluates `requiredWhen` against the live incident.
+2. `fir.validate_form` returned `valid:true` on bad phone/email — format rules only
+   fired on bare rule names, never on dotted paths → shared `validateIncident` enforces
+   `rule` per field.
+3. Invalid phone/email not surfaced — same root cause, fixed.
+4. `fir.submit` accepted an incomplete FIR → now rejects with errors (full-form validate).
+5. Completed-FIR submit returned no `id`/`status` → returns full contract
+   (`id`, `firNumber`, `status`).
+6. `challan.submit` was a stub returning "Challan persisted (stub)" with no FIR link → now
+   persists onto the active incident and returns its `firNumber`; `ChallanGenerator` reads
+   the same JSON and subscribes to the store.
+7. Metrics missing per-module breakdown + parity section → added (FIR / e-Challan /
+   ERSS-112 calls + distinct tools, and a live validation-parity stat).
+
+The BLOCKED item (DevTools→Application→WebMCP panel) is a tool limitation (in-app browser
+has no DevTools); the 12-tool surface was verified via the agent's tool fetch.
+
 
 ### Deterministic MCP harness (evidence, autonomous)
 
 `npm run eval` (`server/eval-scenarios.ts`) round-trips a real MCP Client against
 `createPortalServer` — the exact surface an external agent gets via `npm run mcp` — and
-writes `docs/EVAL_RESULTS.md`. Current: **7/7 PASS** — tool discovery (12, no dupes), E2E
-fill→validate→submit, robustness (incomplete form rejected with errors + submit refused),
-conditional reveal (theft→`property`), cross-module dispatch assignment (`AMB-147`),
-per-tool latency (sub-ms, in-process). It is deterministic (no LLM/browser).
+writes `docs/EVAL_RESULTS.md`. Current: **9/9 PASS** — tool discovery (12, no dupes), E2E
+fill→validate→submit (full contract: id/firNumber/status), robustness (incomplete form +
+submit refused), format parity (bad phone/email surfaced), conditional reveal
+(theft→`property`), **challan linked to the same FIR** (`firNumber` continuity),
+cross-module dispatch assignment, per-tool latency (sub-ms, in-process). Deterministic
+(no LLM/browser).
 
 While building it the harness surfaced and fixed a real bug: `jsonSchemaToZod` made every
 property mandatory when `required` was empty, so optional-arg tools like

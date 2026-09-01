@@ -95,7 +95,7 @@ function getToolsForModule(module: 'fir' | 'challan' | 'dispatch'): ToolDefiniti
     case 'fir':
       return getFirTools(incidentStore)
     case 'challan':
-      return getChallanTools()
+      return getChallanTools(incidentStore)
     case 'dispatch':
       return getDispatchTools(incidentStore)
   }
