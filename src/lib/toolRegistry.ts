@@ -182,6 +182,7 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
         }
         return JSON.stringify({ success: true, field, revealedFields: revealed })
       },
+      annotations: { readOnlyHint: false },
     },
     {
       name: 'fir.flag_missing',
@@ -209,6 +210,7 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
         })
         return JSON.stringify({ flagged: fields, reason: reason || '', count: existing.size })
       },
+      annotations: { readOnlyHint: false },
     },
     {
       name: 'fir.validate_form',
@@ -246,6 +248,7 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
           status: updated?.status ?? 'acknowledged',
         })
       },
+      annotations: { readOnlyHint: false },
     },
     {
       name: 'fir.find_similar_cases',
@@ -302,6 +305,7 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
         const { rcNumber: rn, ...owner } = rc
         return JSON.stringify({ rcNumber: rn, status: 'found', ...owner })
       },
+      annotations: { readOnlyHint: true },
     },
     {
       name: 'challan.auto_calculate_fine',
@@ -323,6 +327,7 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
         const mult = FINE_MATRIX.vehicleClassMultiplier[String(vehicleClass ?? '')] ?? FINE_MATRIX.defaultMultiplier
         return JSON.stringify({ offenseCode, vehicleClass, fineAmount: Math.round(baseAmt * mult) })
       },
+      annotations: { readOnlyHint: true },
     },
     {
       name: 'challan.submit',
@@ -352,6 +357,7 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
         })
         return JSON.stringify({ ok: true, id: incident.id, firNumber: incident.firNumber, challan: updated?.challan })
       },
+      annotations: { readOnlyHint: false },
     },
   ]
 }
@@ -423,6 +429,7 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
         })
         return JSON.stringify({ ok: true, unitId, escalated: false })
       },
+      annotations: { readOnlyHint: false },
     },
   ]
 }
