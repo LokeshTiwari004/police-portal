@@ -8,6 +8,22 @@ type FieldType = 'text' | 'textarea' | 'tel' | 'email' | 'date' | 'time' | 'numb
 
 const sections = (schemaJson as { sections: ValidationSection[] }).sections
 
+// A single reserved draft id per browser session. Reusing it across tab
+// switches (and form clears) means we never pile up empty FIR drafts from
+// simply visiting the FIR tab.
+const RESERVED_DRAFT_ID = 'tab-draft-fir'
+
+function getOrCreateDraft(): Incident {
+  const existing = incidentStore.list().find((i) => i.id === RESERVED_DRAFT_ID)
+  if (existing) return existing
+  return incidentStore.create({
+    complainant: { name: '' },
+    offense: { sections: [] },
+    accused: {},
+    narrative: '',
+  }, { id: RESERVED_DRAFT_ID })
+}
+
 /** Return a shallow copy of the incident with a dotted path set. */
 function setValue(inc: Incident, path: string, value: unknown): Incident {
   const parts = path.split('.')
@@ -23,9 +39,11 @@ function setValue(inc: Incident, path: string, value: unknown): Incident {
 }
 
 export default function FIRForm() {
-  // Start on a fresh blank draft so a seeded record never auto-fills the form.
-  // The officer picks any existing record from the browser to edit it.
-  const [incident, setIncident] = useState<Incident>(() => incidentStore.create())
+  // Start on a blank draft so a seeded record never auto-fills the form, but
+  // reuse a single reserved draft across tab switches so flipping back to the
+  // FIR tab doesn't spawn a new empty record every time. The officer picks any
+  // existing record from the browser to edit it.
+  const [incident, setIncident] = useState<Incident>(() => getOrCreateDraft())
   const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
   const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
   const [submitted, setSubmitted] = useState(false)
@@ -234,7 +252,7 @@ export default function FIRForm() {
         onSelect={(inc, deselect) => {
           // Clicking the active record clears the form back to a blank draft;
           // clicking another loads that record for editing.
-          setIncident(deselect ? incidentStore.create() : inc)
+          setIncident(deselect ? getOrCreateDraft() : inc)
           setSubmitted(false)
         }}
       />

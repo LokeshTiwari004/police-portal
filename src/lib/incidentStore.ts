@@ -190,12 +190,12 @@ export const incidentStore = {
     offense: { sections: [] },
     accused: {},
     narrative: '',
-  }, opts?: { firNumber?: string }): Incident {
+  }, opts?: { firNumber?: string; id?: string }): Incident {
     const incidents = load()
     const seq = incidents.length + 1
     const incident: Incident = {
       ...data,
-      id: crypto.randomUUID(),
+      id: opts?.id ?? crypto.randomUUID(),
       firNumber: opts?.firNumber ?? `FIR-2025-${String(seq).padStart(6, '0')}`,
       createdAt: new Date().toISOString(),
       status: 'draft',

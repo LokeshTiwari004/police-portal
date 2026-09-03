@@ -98,4 +98,16 @@ describe('App shell', () => {
       .find((n) => n.className === 'font-semibold')
     expect(stillShowing).toBeUndefined()
   })
+
+  it('switching away from and back to the FIR tab does not create a new draft', () => {
+    render(<App />)
+    const draftsBefore = incidentStore.list().length
+
+    fireEvent.click(screen.getByRole('button', { name: 'e-Challan' }))
+    fireEvent.click(screen.getByRole('button', { name: 'FIR' }))
+    fireEvent.click(screen.getByRole('button', { name: 'ERSS-112' }))
+    fireEvent.click(screen.getByRole('button', { name: 'FIR' }))
+
+    expect(incidentStore.list().length).toBe(draftsBefore)
+  })
 })
