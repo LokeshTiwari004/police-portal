@@ -101,6 +101,13 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 - [x] Push to public GitHub repo (MIT LICENSE)
 - [x] README — setup + tool list + live URL (judge-facing, tight)
 
+## 🎛️ Record browsing, individual views & seeding
+- [x] `components/RecordBrowser.tsx` — shared filterable list (text / status / module checkboxes) at the top of FIR, e-Challan, ERSS-112 tabs
+- [x] `components/RecordDetail.tsx` — read-only full FIR + challan + ERSS detail for the selected record
+- [x] Selecting a record drives which incident each module edits (default: most recent); `filterIncidents()` unit-tested (`src/lib/recordBrowser.test.ts`)
+- [x] `incidentStore.seed()` — populates an empty store from `SEED_INCIDENTS` (FIR + challan + court summons + ERSS hospital); called by `main.tsx` so a fresh visit has data, while tests stay empty
+- [x] `App.tsx` re-polls briefly for `document.modelContext` so tools are exposed if WebMCP inits late
+
 ## 🤖 External-agent bridge (done — Node MCP server over shared tool logic)
 
 Tool definitions are shared: `src/lib/toolRegistry.ts` (env-agnostic, parameterised over an injected `Store`) is adapted to the browser (WebMCP via `webmcpTools.ts`) and to Node (MCP via `server/mcp-server.ts`).

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { incidentStore, type Incident } from '../lib/incidentStore'
+import { RecordBrowser, defaultFilter, type RecordFilter } from './RecordBrowser'
+import RecordDetail from './RecordDetail'
 import mockRC from '../data/mockRC.json'
 import mvaFines from '../data/mvaFines.json'
 
@@ -37,6 +39,8 @@ function fineFor(offenseCode: string, vehicleClass: string): number {
 export default function ChallanGenerator() {
   const [incident, setIncident] = useState<Incident | undefined>(() => incidentStore.list()[0])
   const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
+  const [activeId, setActiveId] = useState<string>(() => incidentStore.list()[0]?.id ?? '')
+  const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
   const [linkedFirId, setLinkedFirId] = useState<string>('')
   const [rcNumber, setRcNumber] = useState('')
   const [rc, setRc] = useState<RcRecord | null>(null)
@@ -51,7 +55,10 @@ export default function ChallanGenerator() {
     })
   }, [])
 
-  const saved = incident?.challan
+  // The officer can select any record in the browser; default to the most recent.
+  const selected =
+    (activeId ? allIncidents.find((i) => i.id === activeId) : undefined) ?? incident
+  const saved = selected?.challan
   const linkedInc = linkedFirId ? allIncidents.find((i) => i.id === linkedFirId) : undefined
   const hasFIR = linkedInc && linkedInc.complainant.name && linkedInc.offense.sections.length > 0
 
@@ -76,7 +83,7 @@ export default function ChallanGenerator() {
   }
 
   function submitChallan() {
-    const inc = linkedInc ?? incident ?? incidentStore.create()
+    const inc = selected ?? incidentStore.create()
     incidentStore.update(inc.id, {
       challan: {
         rcNumber: lookedUp,
@@ -85,10 +92,11 @@ export default function ChallanGenerator() {
         paid: false,
       },
     })
+    setActiveId(inc.id)
   }
 
   function issueCourtSummons() {
-    const inc = linkedInc ?? incident
+    const inc = selected
     if (!inc?.challan) return
     const seq = Math.floor(Math.random() * 9000) + 1000
     incidentStore.update(inc.id, {
@@ -106,11 +114,21 @@ export default function ChallanGenerator() {
 
   return (
     <div className="space-y-5">
-      {!hasFIR && (
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={activeId}
+        onFilter={setFilter}
+        onSelect={(inc) => setActiveId(inc.id)}
+      />
+
+      {selected && !selected.complainant.name && !selected.offense.sections.length && (
         <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
           Standalone challan mode — no FIR required. Issue a traffic challan independently.
         </div>
       )}
+
+      {selected && <RecordDetail inc={selected} />}
 
       <section className="grid md:grid-cols-2 gap-4">
         <div className="rounded border border-slate-200 p-4">
@@ -195,7 +213,7 @@ export default function ChallanGenerator() {
             Clear form
           </button>
           {hasFIR && <span className="text-xs text-slate-500">Linked to {linkedInc?.firNumber}</span>}
-          {!hasFIR && incident && <span className="text-xs text-slate-500">Standalone challan</span>}
+          {!hasFIR && selected && <span className="text-xs text-slate-500">Working on {selected.firNumber}</span>}
         </div>
         {saved && (
           <div className="mt-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">

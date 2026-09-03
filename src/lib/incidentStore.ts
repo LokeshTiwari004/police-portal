@@ -93,6 +93,66 @@ type Listener = (incidents: Incident[]) => void
 const STORAGE_KEY = 'police-portal:incidents'
 const listeners = new Set<Listener>()
 
+/**
+ * Seed data shown to a fresh visitor so the record browser / filters and every
+ * module have content on first load. Mirrors what `fir.find_similar_cases`
+ * reads (mockIncidents.json) plus a couple of challan + ERSS samples so the
+ * e-Challan and ERSS-112 tabs demonstrate individual-record detail.
+ */
+export const SEED_INCIDENTS: Incident[] = [
+  {
+    id: 'seed-challan-001',
+    firNumber: 'FIR-2025-000502',
+    createdAt: '2025-07-12T09:15:00.000Z',
+    status: 'acknowledged',
+    complainant: { name: 'Vikram Singh', phone: '9812345670', address: '12 Hazratganj Road, Lucknow' },
+    offense: { sections: ['379'], place: 'Hazratganj' },
+    accused: { name: 'name unknown' },
+    property: [],
+    witnesses: [],
+    narrative: 'Vehicle challan issued for overspeeding on MG Road.',
+    missingFields: [],
+    challan: {
+      rcNumber: 'UP14C1234',
+      offenseCode: '180',
+      fineAmount: 2000,
+      paid: false,
+      courtSummons: {
+        summonsNumber: 'CS-2025-1001',
+        courtName: 'Chief Judicial Magistrate Court, Lucknow',
+        courtDate: '2026-09-15',
+        issuedAt: '2025-08-01T10:00:00.000Z',
+      },
+    },
+  },
+  {
+    id: 'seed-eress-001',
+    firNumber: 'FIR-2025-000466',
+    createdAt: '2025-06-28T22:40:00.000Z',
+    status: 'dispatched',
+    complainant: { name: 'Emergency Caller' },
+    offense: { sections: [] },
+    accused: {},
+    property: [],
+    witnesses: [],
+    narrative: 'Reported chest pain on Kanpur Road, ambulance dispatched.',
+    missingFields: [],
+    dispatch: {
+      channel: 'Voice',
+      natureCode: 'MED-001',
+      priority: 'immediate',
+      location: { lat: 26.833, lng: 80.893, label: 'Kanpur Road, Lucknow' },
+      unit: { id: 'AMB-147', type: 'Ambulance', etaMinutes: 4 },
+      hospital: {
+        name: 'King George Medical University',
+        ward: 'Emergency',
+        bedNumber: 'E-101',
+        admittedAt: '2025-06-28T22:55:00.000Z',
+      },
+    },
+  },
+]
+
 function load(): Incident[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -110,6 +170,14 @@ function persist(incidents: Incident[]) {
 export const incidentStore = {
   list(): Incident[] {
     return load()
+  },
+
+  /** Populate the store with `SEED_INCIDENTS` only if it is currently empty. */
+  seed(): Incident[] {
+    const incidents = load()
+    if (incidents.length > 0) return incidents
+    persist(SEED_INCIDENTS)
+    return SEED_INCIDENTS
   },
 
   subscribe(fn: Listener): () => void {

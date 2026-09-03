@@ -36,16 +36,33 @@ export default function App() {
     // Register all 13 tools on first load so the full surface is available to an
     // agent immediately, regardless of which tab is open. Registration is
     // idempotent, so re-runs are safe no-ops.
-    registerAllTools().then(async () => {
+    //
+    // `document.modelContext` can init late (after first paint / StrictMode). If
+    // it is not ready at mount, keep polling briefly until it appears so the
+    // tools are exposed the moment WebMCP becomes available.
+    async function register() {
+      const mc = (document as unknown as { modelContext?: any }).modelContext
+      const ready = !!mc && typeof mc.registerTool === 'function'
+      if (!ready) {
+        for (let i = 0; i < 8; i++) {
+          await new Promise((r) => setTimeout(r, 250))
+          if (cancelled) return
+          const again = (document as unknown as { modelContext?: any }).modelContext
+          if (again && typeof again.registerTool === 'function') break
+          if (i === 7) return // gave up after ~2s
+        }
+      }
       if (cancelled) return
+      await registerAllTools()
       try {
-        const mc = (document as unknown as { modelContext?: any }).modelContext
-        const all = mc ? await mc.getTools() : []
+        const mc2 = (document as unknown as { modelContext?: any }).modelContext
+        const all = mc2 ? await mc2.getTools() : []
         setToolsRegistered(all.length)
       } catch {
         setToolsRegistered(0)
       }
-    })
+    }
+    register()
     return () => {
       cancelled = true
     }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { incidentStore, type Incident } from '../lib/incidentStore'
 import { validateIncident, isFieldRequired, isSectionVisible, getValue, type ValidationSection, type ValidationField } from '../lib/validation'
+import { RecordBrowser, defaultFilter, type RecordFilter } from './RecordBrowser'
 import schemaJson from '../data/formSchema.json'
 
 type FieldType = 'text' | 'textarea' | 'tel' | 'email' | 'date' | 'time' | 'number' | 'select' | 'multiselect' | 'repeat' | 'richtext'
@@ -23,17 +24,21 @@ function setValue(inc: Incident, path: string, value: unknown): Incident {
 
 export default function FIRForm() {
   const [incident, setIncident] = useState<Incident>(() => incidentStore.list()[0] ?? incidentStore.create())
+  const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
+  const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
   const [submitted, setSubmitted] = useState(false)
 
   // Sync with the live active incident. WebMCP tools (fir.fill_field,
   // fir.flag_missing, ...) mutate incidentStore directly; subscribing here
   // makes the agent's edits appear in the form instead of being swallowed by
-  // this component's local state.
+  // this component's local state. The officer can also pick any record from the
+  // browser to edit it individually.
   useEffect(() => {
     return incidentStore.subscribe((incidents) => {
-      setIncident(incidents[0] ?? incidentStore.create())
+      setAllIncidents(incidents)
+      setIncident(incidents.find((i) => i.id === incident.id) ?? incidents[0] ?? incidentStore.create())
     })
-  }, [])
+  }, [incident.id])
 
   const visibleSections = useMemo(
     () => sections.filter((s) => isSectionVisible(s, incident)),
@@ -218,6 +223,17 @@ export default function FIRForm() {
       className="space-y-6"
       data-testid="fir-form"
     >
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={incident.id}
+        onFilter={setFilter}
+        onSelect={(inc) => {
+          setIncident(inc)
+          setSubmitted(inc.status === 'acknowledged')
+        }}
+      />
+
       <div className="flex items-center justify-between">
         <div>
         <h2 className="text-lg font-semibold">{(schemaJson as { title: string }).title}</h2>

@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import { incidentStore, type Incident } from '../lib/incidentStore'
+import { RecordBrowser, defaultFilter, filterIncidents, type RecordFilter } from './RecordBrowser'
+import RecordDetail from './RecordDetail'
 
 /**
  * ERSS-112 dispatch console: live list of incidents from the shared store with
@@ -33,6 +35,8 @@ function classifyNature(text: string): { code: string; label: string } {
 export default function DispatchConsole() {
   const [incidents, setIncidents] = useState<Incident[]>(() => incidentStore.list())
   const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
+  const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
+  const [activeId, setActiveId] = useState<string>(() => incidentStore.list()[0]?.id ?? '')
   const [linkedFirId, setLinkedFirId] = useState<string>('')
   const [newCall, setNewCall] = useState('')
   const [newChannel, setNewChannel] = useState<'Voice' | 'SMS' | 'WhatsApp'>('Voice')
@@ -41,8 +45,13 @@ export default function DispatchConsole() {
     return incidentStore.subscribe((incidents) => {
       setIncidents(incidents)
       setAllIncidents(incidents)
+      if (activeId && !incidents.some((i) => i.id === activeId)) setActiveId(incidents[0]?.id ?? '')
     })
-  }, [])
+  }, [activeId])
+
+  // The officer selects a specific record to work on (default: most recent).
+  const selected = activeId ? allIncidents.find((i) => i.id === activeId) ?? incidents[0] : incidents[0]
+  const shown = filterIncidents(allIncidents, filter)
 
   function createStandaloneCall() {
     if (!newCall.trim()) return
@@ -118,9 +127,19 @@ export default function DispatchConsole() {
 
   return (
     <div className="space-y-4">
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={selected?.id}
+        onFilter={setFilter}
+        onSelect={(inc) => setActiveId(inc.id)}
+      />
+
       <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
         Standalone 112 calls work independently — no FIR required. File an FIR later if needed.
       </div>
+
+      {selected && <RecordDetail inc={selected} />}
 
       <section className="rounded border border-slate-200 p-4">
         <h3 className="font-semibold mb-2">New 112 call</h3>
@@ -168,10 +187,10 @@ export default function DispatchConsole() {
         </div>
       </section>
 
-      {incidents.length === 0 ? (
-        <p className="text-slate-600">No incidents in the dispatch queue. File an FIR or log a 112 call above.</p>
+      {shown.length === 0 ? (
+        <p className="text-slate-600">No incidents match the filters. File an FIR, log a 112 call above, or clear a filter.</p>
       ) : (
-        incidents.map((inc) => {
+        shown.map((inc) => {
           const nature = classifyNature(inc.complainant.name + ' ' + inc.narrative)
           const current = inc.dispatch?.unit?.id
           const isMedical = nature.code === 'MED-001'

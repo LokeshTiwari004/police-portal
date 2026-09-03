@@ -67,3 +67,18 @@ describe('incidentStore.subscribe', () => {
     unsub()
   })
 })
+
+describe('incidentStore.seed', () => {
+  it('populates an empty store with demo records (FIR + challan + ERSS)', () => {
+    const seeded = incidentStore.seed()
+    expect(seeded.length).toBeGreaterThanOrEqual(2)
+    expect(seeded.some((i) => i.challan)).toBe(true)
+    expect(seeded.some((i) => i.dispatch)).toBe(true)
+  })
+
+  it('is a no-op when records already exist (does not duplicate)', () => {
+    incidentStore.seed()
+    const first = incidentStore.list().length
+    expect(incidentStore.seed().length).toBe(first)
+  })
+})
