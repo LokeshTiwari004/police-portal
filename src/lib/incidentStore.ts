@@ -60,6 +60,12 @@ export interface Incident {
     fineAmount: number
     evidencePhoto?: string
     paid: boolean
+    courtSummons?: {
+      summonsNumber: string
+      courtName: string
+      courtDate: string
+      issuedAt: string
+    }
   }
 
   // ERSS-112 (module: Dispatch)
@@ -72,6 +78,12 @@ export interface Incident {
       id: string
       type: string
       etaMinutes: number
+    }
+    hospital?: {
+      name: string
+      ward: string
+      bedNumber: string
+      admittedAt: string
     }
   }
 }

@@ -29,8 +29,8 @@ function fineFor(offenseCode: string, vehicleClass: string): number {
 }
 
 /**
- * e-Challan generator: looks up a vehicle RC and auto-calculates MVA fines,
- * linking the challan back to a FIR incident in the shared store.
+ * e-Challan generator: looks up a vehicle RC and auto-calculates MVA fines.
+ * Works both independently (standalone challan) and linked to a FIR incident.
  * Reads the SAME mockRC.json / mvaFines.json the challan/* tools use, and
  * subscribes to the store so a challan created by an agent tool appears live.
  */
@@ -47,6 +47,7 @@ export default function ChallanGenerator() {
   }, [])
 
   const saved = incident?.challan
+  const hasFIR = incident && incident.complainant.name && incident.offense.sections.length > 0
 
   function lookupRc() {
     const rec = RC_DB.find((r) => r.rcNumber.toUpperCase() === rcNumber.toUpperCase().trim())
@@ -72,8 +73,30 @@ export default function ChallanGenerator() {
     })
   }
 
+  function issueCourtSummons() {
+    if (!incident?.challan) return
+    const seq = Math.floor(Math.random() * 9000) + 1000
+    incidentStore.update(incident.id, {
+      challan: {
+        ...incident.challan,
+        courtSummons: {
+          summonsNumber: `CS-2025-${seq}`,
+          courtName: 'Chief Judicial Magistrate Court, Lucknow',
+          courtDate: new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0],
+          issuedAt: new Date().toISOString(),
+        },
+      },
+    })
+  }
+
   return (
     <div className="space-y-5">
+      {!hasFIR && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
+          Standalone challan mode — no FIR required. Issue a traffic challan independently.
+        </div>
+      )}
+
       <section className="grid md:grid-cols-2 gap-4">
         <div className="rounded border border-slate-200 p-4">
           <h3 className="font-semibold mb-2">1 · Look up vehicle (RC)</h3>
@@ -133,17 +156,44 @@ export default function ChallanGenerator() {
             disabled={!rc || fine == null}
             className="rounded bg-emerald-600 text-white px-4 py-2 text-sm disabled:opacity-40"
           >
-            Save challan to incident
+            Save challan
           </button>
-          {incident && <span className="text-xs text-slate-500">Linked to {incident.firNumber}</span>}
+          {hasFIR && <span className="text-xs text-slate-500">Linked to {incident?.firNumber}</span>}
+          {!hasFIR && incident && <span className="text-xs text-slate-500">Standalone challan</span>}
         </div>
         {saved && (
           <div className="mt-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">
-            Challan for <strong>{saved.rcNumber}</strong> · Section {saved.offenseCode} · ₹{saved.fineAmount}{' '}
-            on <strong>{incident?.firNumber}</strong>
+            Challan for <strong>{saved.rcNumber}</strong> · Section {saved.offenseCode} · ₹{saved.fineAmount}
+            {hasFIR && <> on <strong>{incident?.firNumber}</strong></>}
           </div>
         )}
       </section>
+
+      {saved && !saved.paid && !saved.courtSummons && (
+        <section className="rounded border border-amber-200 bg-amber-50 p-4">
+          <h3 className="font-semibold mb-2 text-amber-800">4 · Court summons (unpaid challan)</h3>
+          <p className="text-sm text-amber-700 mb-3">
+            This challan is unpaid. Issue a court summons to escalate.
+          </p>
+          <button
+            onClick={issueCourtSummons}
+            className="rounded bg-amber-600 text-white px-4 py-2 text-sm"
+          >
+            Issue court summons
+          </button>
+        </section>
+      )}
+
+      {saved?.courtSummons && (
+        <section className="rounded border border-amber-200 bg-amber-50 p-4">
+          <h3 className="font-semibold mb-2 text-amber-800">Court Summons Issued</h3>
+          <dl className="text-sm space-y-1">
+            <Row k="Summons #" v={saved.courtSummons.summonsNumber} />
+            <Row k="Court" v={saved.courtSummons.courtName} />
+            <Row k="Hearing Date" v={saved.courtSummons.courtDate} />
+          </dl>
+        </section>
+      )}
     </div>
   )
 }
