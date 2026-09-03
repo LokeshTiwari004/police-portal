@@ -36,6 +36,8 @@ function fineFor(offenseCode: string, vehicleClass: string): number {
  */
 export default function ChallanGenerator() {
   const [incident, setIncident] = useState<Incident | undefined>(() => incidentStore.list()[0])
+  const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
+  const [linkedFirId, setLinkedFirId] = useState<string>('')
   const [rcNumber, setRcNumber] = useState('')
   const [rc, setRc] = useState<RcRecord | null>(null)
   const [lookedUp, setLookedUp] = useState('')
@@ -43,11 +45,15 @@ export default function ChallanGenerator() {
   const [fine, setFine] = useState<number | null>(null)
 
   useEffect(() => {
-    return incidentStore.subscribe((incidents) => setIncident(incidents[0]))
+    return incidentStore.subscribe((incidents) => {
+      setIncident(incidents[0])
+      setAllIncidents(incidents)
+    })
   }, [])
 
   const saved = incident?.challan
-  const hasFIR = incident && incident.complainant.name && incident.offense.sections.length > 0
+  const linkedInc = linkedFirId ? allIncidents.find((i) => i.id === linkedFirId) : undefined
+  const hasFIR = linkedInc && linkedInc.complainant.name && linkedInc.offense.sections.length > 0
 
   function lookupRc() {
     const rec = RC_DB.find((r) => r.rcNumber.toUpperCase() === rcNumber.toUpperCase().trim())
@@ -70,7 +76,7 @@ export default function ChallanGenerator() {
   }
 
   function submitChallan() {
-    const inc = incident ?? incidentStore.create()
+    const inc = linkedInc ?? incident ?? incidentStore.create()
     incidentStore.update(inc.id, {
       challan: {
         rcNumber: lookedUp,
@@ -82,11 +88,12 @@ export default function ChallanGenerator() {
   }
 
   function issueCourtSummons() {
-    if (!incident?.challan) return
+    const inc = linkedInc ?? incident
+    if (!inc?.challan) return
     const seq = Math.floor(Math.random() * 9000) + 1000
-    incidentStore.update(incident.id, {
+    incidentStore.update(inc.id, {
       challan: {
-        ...incident.challan,
+        ...inc.challan,
         courtSummons: {
           summonsNumber: `CS-2025-${seq}`,
           courtName: 'Chief Judicial Magistrate Court, Lucknow',
@@ -158,6 +165,21 @@ export default function ChallanGenerator() {
 
       <section className="rounded border border-slate-200 p-4">
         <h3 className="font-semibold mb-2">3 · Issue challan</h3>
+        <div className="mb-3">
+          <label className="block text-xs text-slate-500 mb-1">Attach to FIR (optional)</label>
+          <select
+            value={linkedFirId}
+            onChange={(e) => setLinkedFirId(e.target.value)}
+            className="rounded border border-slate-300 px-3 py-2 text-sm w-full"
+          >
+            <option value="">— Standalone (no FIR) —</option>
+            {allIncidents.filter((i) => i.complainant.name || i.offense.sections.length > 0).map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.firNumber} — {i.complainant.name || 'Unnamed'} ({i.status})
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex items-center gap-3">
           <button
             onClick={submitChallan}
@@ -172,13 +194,13 @@ export default function ChallanGenerator() {
           >
             Clear form
           </button>
-          {hasFIR && <span className="text-xs text-slate-500">Linked to {incident?.firNumber}</span>}
+          {hasFIR && <span className="text-xs text-slate-500">Linked to {linkedInc?.firNumber}</span>}
           {!hasFIR && incident && <span className="text-xs text-slate-500">Standalone challan</span>}
         </div>
         {saved && (
           <div className="mt-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">
             Challan for <strong>{saved.rcNumber}</strong> · Section {saved.offenseCode} · ₹{saved.fineAmount}
-            {hasFIR && <> on <strong>{incident?.firNumber}</strong></>}
+            {hasFIR && <> on <strong>{linkedInc?.firNumber}</strong></>}
           </div>
         )}
       </section>
