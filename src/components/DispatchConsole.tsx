@@ -78,7 +78,7 @@ export default function DispatchConsole() {
           priority: nature.code === 'MED-001' ? 'immediate' : 'urgent',
           location: { lat: 26.8467, lng: 80.9462, label: 'Lucknow, UP' },
         },
-      })
+      }, { firNumber: `ERS-2025-${String(allIncidents.length + 1).padStart(6, '0')}` })
     }
     setNewCall('')
     setLinkedFirId('')
@@ -126,10 +126,6 @@ export default function DispatchConsole() {
 
   return (
     <div className="space-y-4">
-      <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
-        Standalone 112 calls work independently — no FIR required. File an FIR later if needed.
-      </div>
-
       <section className="rounded border border-slate-200 p-4">
         <h3 className="font-semibold mb-2">New 112 call</h3>
         <div className="mb-2">

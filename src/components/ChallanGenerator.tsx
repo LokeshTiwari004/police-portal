@@ -59,7 +59,6 @@ export default function ChallanGenerator() {
   const saved = selected?.challan
   const linkedInc = linkedFirId ? allIncidents.find((i) => i.id === linkedFirId) : undefined
   const hasFIR = linkedInc && linkedInc.complainant.name && linkedInc.offense.sections.length > 0
-  const standalone = !selected || (!selected.complainant.name && !selected.offense.sections.length)
 
   function lookupRc() {
     const rec = RC_DB.find((r) => r.rcNumber.toUpperCase() === rcNumber.toUpperCase().trim())
@@ -82,7 +81,9 @@ export default function ChallanGenerator() {
   }
 
   function submitChallan() {
-    const inc = selected ?? incidentStore.create()
+    const inc = selected ?? incidentStore.create(undefined, {
+      firNumber: `CHL-2025-${String(allIncidents.length + 1).padStart(6, '0')}`,
+    })
     incidentStore.update(inc.id, {
       challan: {
         rcNumber: lookedUp,
@@ -113,12 +114,6 @@ export default function ChallanGenerator() {
 
   return (
     <div className="space-y-5">
-      {standalone && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
-          Standalone challan mode — no FIR required. Issue a traffic challan independently.
-        </div>
-      )}
-
       <section className="grid md:grid-cols-2 gap-4">
         <div className="rounded border border-slate-200 p-4">
           <h3 className="font-semibold mb-2">1 · Look up vehicle (RC)</h3>

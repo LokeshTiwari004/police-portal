@@ -1,6 +1,6 @@
 # EVAL RESULTS — external-agent MCP harness
 
-Run: 2026-09-03T15:21:46.129Z
+Run: 2026-09-03T15:35:01.379Z
 Surface: real MCP Client <-> createPortalServer (same server as `npm run mcp`)
 Result: **9/9 PASS** — all green
 
@@ -14,7 +14,7 @@ Result: **9/9 PASS** — all green
 | Conditional reveal (theft -> property) | property in hiddenWhenRevealed | hidden=[property] | PASS |
 | Challan linked to FIR | challan.submit returns same firNumber + persisted challan | firNumber=FIR-2025-000001 (expected FIR-2025-000001), challan=true | PASS |
 | Cross-module flow (dispatch assigned) | unit assigned | units=3, assignedUnit=AMB-147 | PASS |
-| Per-tool latency (avg) | low (in-process) | 0.3ms | PASS |
+| Per-tool latency (avg) | low (in-process) | 0.2ms | PASS |
 
 > Deterministic (no LLM, no browser). Covers the automation-drivable
 > subset of the hackathon eval metrics over the MCP surface. The live-browser

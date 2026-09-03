@@ -35,7 +35,7 @@ describe('App shell', () => {
     expect(screen.queryByText(/Complainant Details/)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'ERSS-112' }))
-    expect(screen.getByText(/Standalone 112 calls work independently/i)).toBeInTheDocument()
+    expect(screen.getByText(/New 112 call/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Metrics' }))
     expect(screen.getByText(/WebMCP tool telemetry/i)).toBeInTheDocument()
@@ -72,7 +72,7 @@ describe('App shell', () => {
     act(() => {
       window.dispatchEvent(new CustomEvent('portal:tabchange', { detail: { tab: 'dispatch' } }))
     })
-    expect(screen.getByText(/Standalone 112 calls work independently/i)).toBeInTheDocument()
+    expect(screen.getByText(/New 112 call/i)).toBeInTheDocument()
   })
 
   it('selecting a record shows its detail card, and selecting it again hides it', () => {
