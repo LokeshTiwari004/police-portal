@@ -16,7 +16,7 @@ export type RecordFilter = {
 }
 
 export function defaultFilter(): RecordFilter {
-  return { text: '', status: '', hasFir: true, hasChallan: true, hasDispatch: true }
+  return { text: '', status: '', hasFir: false, hasChallan: false, hasDispatch: false }
 }
 
 export function filterIncidents(incidents: Incident[], f: RecordFilter): Incident[] {

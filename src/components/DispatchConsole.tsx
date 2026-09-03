@@ -127,14 +127,6 @@ export default function DispatchConsole() {
 
   return (
     <div className="space-y-4">
-      <RecordBrowser
-        incidents={allIncidents}
-        filter={filter}
-        activeId={selected?.id}
-        onFilter={setFilter}
-        onSelect={(inc) => setActiveId(inc.id)}
-      />
-
       <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
         Standalone 112 calls work independently — no FIR required. File an FIR later if needed.
       </div>
@@ -252,6 +244,14 @@ export default function DispatchConsole() {
           )
         })
       )}
+
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={selected?.id}
+        onFilter={setFilter}
+        onSelect={(inc) => setActiveId(inc.id)}
+      />
     </div>
   )
 }

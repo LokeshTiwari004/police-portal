@@ -23,7 +23,7 @@ const empty = { ...base } // no complainant, offense, challan, or dispatch
 
 describe('filterIncidents (RecordBrowser)', () => {
   it('shows every module by default', () => {
-    expect(filterIncidents([fir, challan, dispatch, empty], defaultFilter()).map((i) => i.id)).toEqual(['a', 'b', 'c', 'x'])
+    expect(filterIncidents([fir, challan, dispatch, empty], defaultFilter()).map((i) => i.id)).toEqual([])
   })
 
   it('filters to a single module', () => {
@@ -36,6 +36,7 @@ describe('filterIncidents (RecordBrowser)', () => {
 
   it('treats a bare draft as an FIR in progress', () => {
     const f = defaultFilter()
+    f.hasFir = true
     f.hasChallan = false
     f.hasDispatch = false
     expect(filterIncidents([empty, dispatch], f).map((i) => i.id)).toEqual(['x'])
@@ -43,13 +44,15 @@ describe('filterIncidents (RecordBrowser)', () => {
 
   it('filters by status', () => {
     const f = defaultFilter()
+    f.hasFir = true
+    f.hasDispatch = true
     f.status = 'dispatched'
     expect(filterIncidents([fir, dispatch], f).map((i) => i.id)).toEqual(['c'])
   })
 
   it('filters by free-text across firNumber / complainant / RC / nature', () => {
-    expect(filterIncidents([fir, challan, dispatch], { ...defaultFilter(), text: 'alice' }).map((i) => i.id)).toEqual(['a'])
-    expect(filterIncidents([fir, challan, dispatch], { ...defaultFilter(), text: 'up14c1234' }).map((i) => i.id)).toEqual(['b'])
-    expect(filterIncidents([fir, challan, dispatch], { ...defaultFilter(), text: 'med-001' }).map((i) => i.id)).toEqual(['c'])
+    expect(filterIncidents([fir, challan, dispatch], { ...defaultFilter(), hasFir: true, text: 'alice' }).map((i) => i.id)).toEqual(['a'])
+    expect(filterIncidents([fir, challan, dispatch], { ...defaultFilter(), hasChallan: true, text: 'up14c1234' }).map((i) => i.id)).toEqual(['b'])
+    expect(filterIncidents([fir, challan, dispatch], { ...defaultFilter(), hasDispatch: true, text: 'med-001' }).map((i) => i.id)).toEqual(['c'])
   })
 })

@@ -114,14 +114,6 @@ export default function ChallanGenerator() {
 
   return (
     <div className="space-y-5">
-      <RecordBrowser
-        incidents={allIncidents}
-        filter={filter}
-        activeId={activeId}
-        onFilter={setFilter}
-        onSelect={(inc) => setActiveId(inc.id)}
-      />
-
       {selected && !selected.complainant.name && !selected.offense.sections.length && (
         <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
           Standalone challan mode — no FIR required. Issue a traffic challan independently.
@@ -248,6 +240,14 @@ export default function ChallanGenerator() {
           </dl>
         </section>
       )}
+
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={activeId}
+        onFilter={setFilter}
+        onSelect={(inc) => setActiveId(inc.id)}
+      />
     </div>
   )
 }

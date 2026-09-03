@@ -34,7 +34,7 @@ describe('App shell', () => {
     expect(screen.queryByText(/Complainant Details/)).not.toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'ERSS-112' }))
-    expect(screen.getByText(/PCR-88/i)).toBeInTheDocument()
+    expect(screen.getByText(/Standalone 112 calls work independently/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Metrics' }))
     expect(screen.getByText(/WebMCP tool telemetry/i)).toBeInTheDocument()
@@ -71,6 +71,6 @@ describe('App shell', () => {
     act(() => {
       window.dispatchEvent(new CustomEvent('portal:tabchange', { detail: { tab: 'dispatch' } }))
     })
-    expect(screen.getByText(/PCR-88/i)).toBeInTheDocument()
+    expect(screen.getByText(/Standalone 112 calls work independently/i)).toBeInTheDocument()
   })
 })
