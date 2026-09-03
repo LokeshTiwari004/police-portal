@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import App from './App'
 import { mockModelContext } from './test/modelContextMock'
+import { incidentStore } from './lib/incidentStore'
 
 /**
  * System test: renders the full App shell (header, tab nav, module content)
@@ -72,5 +73,29 @@ describe('App shell', () => {
       window.dispatchEvent(new CustomEvent('portal:tabchange', { detail: { tab: 'dispatch' } }))
     })
     expect(screen.getByText(/Standalone 112 calls work independently/i)).toBeInTheDocument()
+  })
+
+  it('selecting a record shows its detail card, and selecting it again hides it', () => {
+    render(<App />)
+    const fir = incidentStore.create()
+    act(() => {
+      incidentStore.update(fir.id, { complainant: { name: 'Test User' } })
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: 'e-Challan' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'FIR' }))
+
+    const row = screen.getByRole('button', { name: new RegExp(fir.firNumber) })
+    fireEvent.click(row)
+    // Detail card for the record appears (firNumber heading).
+    const detailHeading = screen.getAllByText(fir.firNumber).find((n) => n.className === 'font-semibold')
+    expect(detailHeading).toBeTruthy()
+
+    fireEvent.click(row)
+    // Selecting the same record again dismisses the detail card.
+    const stillShowing = screen
+      .getAllByText(fir.firNumber)
+      .find((n) => n.className === 'font-semibold')
+    expect(stillShowing).toBeUndefined()
   })
 })

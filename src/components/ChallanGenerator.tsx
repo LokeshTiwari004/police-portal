@@ -211,7 +211,7 @@ export default function ChallanGenerator() {
         filter={filter}
         activeId={activeId}
         onFilter={setFilter}
-        onSelect={(inc) => setActiveId(inc.id)}
+        onSelect={(inc, deselect) => setActiveId(deselect ? '' : inc.id)}
       />
 
       {selected && <RecordDetail inc={selected} />}

@@ -54,7 +54,7 @@ export function RecordBrowser({
   filter: RecordFilter
   activeId?: string
   onFilter: (f: RecordFilter) => void
-  onSelect: (inc: Incident) => void
+  onSelect: (inc: Incident, deselect?: boolean) => void
 }) {
   const results = filterIncidents(incidents, filter)
   return (
@@ -116,7 +116,7 @@ export function RecordBrowser({
             return (
               <li key={inc.id}>
                 <button
-                  onClick={() => onSelect(inc)}
+                  onClick={() => onSelect(inc, activeId === inc.id)}
                   className={`w-full text-left px-3 py-1.5 text-sm rounded hover:bg-slate-50 flex items-start justify-between gap-2 ${
                     activeId === inc.id ? 'bg-emerald-50 border border-emerald-200' : ''
                   }`}

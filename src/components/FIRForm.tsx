@@ -231,9 +231,11 @@ export default function FIRForm() {
         filter={filter}
         activeId={incident.id}
         onFilter={setFilter}
-        onSelect={(inc) => {
-          setIncident(inc)
-          setSubmitted(inc.status === 'acknowledged')
+        onSelect={(inc, deselect) => {
+          // Clicking the active record clears the form back to a blank draft;
+          // clicking another loads that record for editing.
+          setIncident(deselect ? incidentStore.create() : inc)
+          setSubmitted(false)
         }}
       />
 

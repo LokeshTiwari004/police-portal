@@ -181,7 +181,7 @@ export default function DispatchConsole() {
         filter={filter}
         activeId={selected?.id}
         onFilter={setFilter}
-        onSelect={(inc) => setActiveId(inc.id)}
+        onSelect={(inc, deselect) => setActiveId(deselect ? '' : inc.id)}
       />
 
       {selected && <RecordDetail inc={selected} />}
