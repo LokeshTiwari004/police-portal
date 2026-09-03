@@ -260,6 +260,24 @@ export default function FIRForm() {
         >
           {submitted || incident.status === 'acknowledged' ? 'FIR Submitted' : 'Submit FIR'}
         </button>
+        <button
+          type="button"
+          onClick={() => {
+            incidentStore.update(incident.id, {
+              complainant: { name: '' },
+              offense: { sections: [] },
+              accused: {},
+              property: [],
+              witnesses: [],
+              narrative: '',
+              missingFields: [],
+            })
+            setSubmitted(false)
+          }}
+          className="px-4 py-2.5 rounded-lg text-sm font-medium border border-slate-300 text-slate-700 hover:bg-slate-50 transition"
+        >
+          Clear form
+        </button>
         {(submitted || incident.status === 'acknowledged') && (
           <span className="text-sm text-emerald-700">
             {incident.firNumber} — acknowledged

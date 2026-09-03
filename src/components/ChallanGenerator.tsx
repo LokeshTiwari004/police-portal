@@ -61,6 +61,14 @@ export default function ChallanGenerator() {
     setFine(fineFor(offenseCode, rc.vehicleClass))
   }
 
+  function resetForm() {
+    setRcNumber('')
+    setRc(null)
+    setLookedUp('')
+    setOffenseCode('180')
+    setFine(null)
+  }
+
   function submitChallan() {
     const inc = incident ?? incidentStore.create()
     incidentStore.update(inc.id, {
@@ -157,6 +165,12 @@ export default function ChallanGenerator() {
             className="rounded bg-emerald-600 text-white px-4 py-2 text-sm disabled:opacity-40"
           >
             Save challan
+          </button>
+          <button
+            onClick={resetForm}
+            className="rounded border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Clear form
           </button>
           {hasFIR && <span className="text-xs text-slate-500">Linked to {incident?.firNumber}</span>}
           {!hasFIR && incident && <span className="text-xs text-slate-500">Standalone challan</span>}

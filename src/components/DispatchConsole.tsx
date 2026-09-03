@@ -125,6 +125,12 @@ export default function DispatchConsole() {
           <button onClick={createStandaloneCall} className="rounded bg-slate-900 text-white px-4 py-2 text-sm">
             Log call
           </button>
+          <button
+            onClick={() => { setNewCall(''); setNewChannel('Voice') }}
+            className="rounded border border-slate-300 text-slate-700 px-4 py-2 text-sm hover:bg-slate-50"
+          >
+            Clear
+          </button>
         </div>
       </section>
 
