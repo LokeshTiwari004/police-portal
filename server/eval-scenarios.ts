@@ -65,17 +65,18 @@ async function main() {
   // 1. Tool discovery completeness
   const { tools } = await client.listTools()
   const names = tools.map((t) => t.name)
-  const all12 = [
+  const allTools = [
     'fir.identify_required_fields', 'fir.fill_field', 'fir.flag_missing',
     'fir.validate_form', 'fir.submit', 'fir.find_similar_cases',
     'challan.lookup_rc', 'challan.auto_calculate_fine', 'challan.submit',
     'dispatch.classify_nature', 'dispatch.get_available_units', 'dispatch.assign_unit',
+    'nav.switch_tab',
   ]
   rows.push({
-    metric: 'Tool discovery (6/3/3)',
-    target: '12 tools listed',
+    metric: 'Tool discovery (6/3/3/1)',
+    target: '13 tools listed',
     actual: `${names.length} tools`,
-    pass: all12.every((n) => names.includes(n)),
+    pass: allTools.every((n) => names.includes(n)),
   })
 
   // 2. No duplicate tools

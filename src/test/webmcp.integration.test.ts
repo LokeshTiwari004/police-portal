@@ -68,9 +68,9 @@ describe('fir.* tools integrate with incidentStore', () => {
       console.warn = warn
     }
     expect(warnings).toHaveLength(0)
-    expect(mc.registered.length).toBe(12)
+    expect(mc.registered.length).toBe(13)
     const names = mc.registered.map((t) => t.name)
-    for (const name of ['fir.submit', 'challan.lookup_rc', 'dispatch.assign_unit']) {
+    for (const name of ['fir.submit', 'challan.lookup_rc', 'dispatch.assign_unit', 'nav.switch_tab']) {
       expect(names).toContain(name)
     }
   })

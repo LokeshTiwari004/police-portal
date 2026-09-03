@@ -89,7 +89,7 @@ verdict on whether the portal is judge-demo-ready.
 
 Paste the agent's report back; the maintainer reconciles these checklist boxes in
 `docs/TODO.md` and updates the evaluation status table in `docs/EVAL.md`:
-- Vercel-URL WebMCP verification (12 tools, no flag on HTTPS)
+- Vercel-URL WebMCP verification (13 tools, no flag on HTTPS)
 - Prod tools driven via Tool Inspector extension (Metrics counts)
 - Round-trip robustness (invalid phone/email/date, conditional requiredWhen, empty
   narrative, no incident)

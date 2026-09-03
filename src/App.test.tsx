@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import App from './App'
 import { mockModelContext } from './test/modelContextMock'
 
@@ -43,18 +43,34 @@ describe('App shell', () => {
     expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
   })
 
-  it('registers all 12 tools on first load, independent of the open tab', async () => {
+  it('registers 13 tools on first load, independent of the open tab', async () => {
     const mc = mockModelContext()
     render(<App />)
 
-    await waitFor(() => expect(mc.registered.length).toBe(12))
+    await waitFor(() => expect(mc.registered.length).toBe(13))
     const names = mc.registered.map((t) => t.name)
     expect(names).toEqual(
       expect.arrayContaining([
         'fir.fill_field',
         'challan.lookup_rc',
         'dispatch.assign_unit',
+        'nav.switch_tab',
       ]),
     )
+  })
+
+  it('switches tabs when the nav.switch_tab tool fires a tabchange event', () => {
+    render(<App />)
+    expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('portal:tabchange', { detail: { tab: 'challan' } }))
+    })
+    expect(screen.getByText(/1 · Look up vehicle/i)).toBeInTheDocument()
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('portal:tabchange', { detail: { tab: 'dispatch' } }))
+    })
+    expect(screen.getByText(/PCR-88/i)).toBeInTheDocument()
   })
 })

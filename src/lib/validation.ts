@@ -90,6 +90,9 @@ export function requiredFieldsForSections(
   if (sections.some((s) => ['379', '380', '381'].includes(s))) {
     required.push('property')
   }
+  if (sections.some((s) => ['279', '304A'].includes(s))) {
+    required.push('property')
+  }
   return required
 }
 
@@ -141,6 +144,11 @@ export function isSectionVisible(section: ValidationSection, incident: object): 
 
 /** A field is required when flagged required, or when its requiredWhen condition holds. */
 export function isFieldRequired(field: ValidationField, incident: object): boolean {
+  const isSuo = isSectionVisible(
+    { id: 'suoMoto', fields: [], label: '', dependsOn: { field: 'offense.sections', includeAny: ['SUO'] } },
+    incident,
+  )
+  if (isSuo && field.name.startsWith('complainant.')) return false
   if (field.required) return true
   if (field.requiredWhen?.isEmpty) {
     return isEmptyValue(getValue(incident, field.requiredWhen.field))

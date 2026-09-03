@@ -1,7 +1,7 @@
 /**
  * WebMCP tool registration (browser).
  *
- * The 12 portal tool definitions live in `toolRegistry.ts` (environment-
+ * The 13 portal tool definitions live in `toolRegistry.ts` (environment-
  * agnostic; an external agent can reach them over MCP via `server/mcp-server.ts`).
  * This module adapts those definitions to the browser by injecting the
  * localStorage-backed `incidentStore` and registering them against
@@ -20,7 +20,7 @@
 
 import { incidentStore } from './incidentStore'
 import { telemetry } from './telemetry'
-import { getFirTools, getChallanTools, getDispatchTools, type ToolDefinition } from './toolRegistry'
+import { getFirTools, getChallanTools, getDispatchTools, getNavTools, type ToolDefinition } from './toolRegistry'
 
 const registeredToolNames = new Set<string>()
 
@@ -64,7 +64,7 @@ async function registerToolOnce(mc: { registerTool(tool: ToolDefinition): Promis
  * load; calling `registerTools` repeatedly (tab switch, StrictMode remount)
  * is a safe no-op.
  */
-export async function registerTools(module: 'fir' | 'challan' | 'dispatch') {
+export async function registerTools(module: 'fir' | 'challan' | 'dispatch' | 'nav') {
   const mc = (document as unknown as { modelContext?: any }).modelContext
   if (!mc || typeof mc.registerTool !== 'function') return
 
@@ -79,7 +79,7 @@ export async function registerAllTools() {
   const mc = (document as unknown as { modelContext?: any }).modelContext
   if (!mc || typeof mc.registerTool !== 'function') return
 
-  const tools = ['fir', 'challan', 'dispatch'].flatMap((m) => getToolsForModule(m as 'fir' | 'challan' | 'dispatch'))
+  const tools = ['fir', 'challan', 'dispatch', 'nav'].flatMap((m) => getToolsForModule(m as 'fir' | 'challan' | 'dispatch' | 'nav'))
   telemetry.beginRegistration(tools.length)
   await Promise.all(tools.map((t) => registerToolOnce(mc, t)))
   telemetry.endRegistration()
@@ -90,7 +90,7 @@ export function resetRegisteredTools() {
   registeredToolNames.clear()
 }
 
-function getToolsForModule(module: 'fir' | 'challan' | 'dispatch'): ToolDefinition[] {
+function getToolsForModule(module: 'fir' | 'challan' | 'dispatch' | 'nav'): ToolDefinition[] {
   switch (module) {
     case 'fir':
       return getFirTools(incidentStore)
@@ -98,5 +98,7 @@ function getToolsForModule(module: 'fir' | 'challan' | 'dispatch'): ToolDefiniti
       return getChallanTools(incidentStore)
     case 'dispatch':
       return getDispatchTools(incidentStore)
+    case 'nav':
+      return getNavTools()
   }
 }

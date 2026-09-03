@@ -20,7 +20,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
 import type { Incident } from '../src/lib/incidentStore'
-import { getFirTools, getChallanTools, getDispatchTools, type Store, type ToolDefinition } from '../src/lib/toolRegistry'
+import { getFirTools, getChallanTools, getDispatchTools, getNavTools, type Store, type ToolDefinition } from '../src/lib/toolRegistry'
 import { createMemoryStore } from '../src/lib/memoryStore'
 
 /** Convert our JSON-schema `inputSchema` into a zod schema the MCP SDK requires. */
@@ -75,7 +75,7 @@ function registerToolOnServer(server: McpServer, tool: ToolDefinition) {
 /** Build an MCP server with all 12 portal tools registered against a fresh in-memory store. */
 export function createPortalServer(store: Store<Incident> = createMemoryStore()): { server: McpServer; store: Store<Incident> } {
   const server = new McpServer({ name: 'police-portal', version: '1.0.0' })
-  getFirTools(store).concat(getChallanTools(store), getDispatchTools(store)).forEach((t) => registerToolOnServer(server, t))
+  getFirTools(store).concat(getChallanTools(store), getDispatchTools(store), getNavTools()).forEach((t) => registerToolOnServer(server, t))
   return { server, store }
 }
 

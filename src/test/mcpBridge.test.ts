@@ -3,11 +3,11 @@
  *
  * Prove the shared tool registry (`toolRegistry.ts`) drives the same behavior
  * through the Node MCP server's in-memory store as it does in the browser,
- * and that `createPortalServer` registers all 12 tools.
+ * and that `createPortalServer` registers all 13 tools.
  */
 import { describe, it, expect } from 'vitest'
 import { createMemoryStore } from '../lib/memoryStore'
-import { getFirTools, getDispatchTools, getChallanTools } from '../lib/toolRegistry'
+import { getFirTools, getDispatchTools, getChallanTools, getNavTools } from '../lib/toolRegistry'
 
 describe('external-agent MCP bridge', () => {
   it('memory store creates an incident with generated metadata', () => {
@@ -38,7 +38,7 @@ describe('external-agent MCP bridge', () => {
     expect(store.list()[0].status).toBe('acknowledged')
   })
 
-  it('the shared registries expose the full 12-tool surface used by both WebMCP and MCP', () => {
+  it('the shared registries expose the full 13-tool surface used by both WebMCP and MCP', () => {
     for (const t of getFirTools(createMemoryStore())) expect(t.title).toBeTruthy()
     expect(getFirTools(createMemoryStore()).map((t) => t.name)).toEqual([
       'fir.identify_required_fields',
@@ -58,6 +58,14 @@ describe('external-agent MCP bridge', () => {
       'dispatch.get_available_units',
       'dispatch.assign_unit',
     ])
+    expect(getNavTools().map((t) => t.name)).toEqual(['nav.switch_tab'])
+  })
+
+  it('nav.switch_tab is a safe no-op over MCP (no window) and reports the tab', async () => {
+    const [tool] = getNavTools()
+    const result = JSON.parse((await tool.execute({ tab: 'challan' })) as string)
+    expect(result.ok).toBe(true)
+    expect(result.switchedTo).toBe('challan')
   })
 
   it('challan.submit persists onto the active FIR and returns its firNumber (cross-module continuity)', async () => {

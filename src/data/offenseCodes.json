@@ -1,4 +1,7 @@
 [
+  { "code": "SUO", "act": "CrPC/BNSS", "label": "Suo Moto (Police Initiated)", "category": "Suo Moto", "cognizable": true },
+  { "code": "279", "act": "IPC", "label": "Rash driving / Hit and Run", "category": "Road Accident / Hit & Run", "cognizable": true },
+  { "code": "304A", "act": "IPC", "label": "Death by negligence / Hit and Run", "category": "Road Accident / Hit & Run", "cognizable": true },
   { "code": "302", "act": "IPC", "label": "Murder", "category": "Homicide", "cognizable": true },
   { "code": "323", "act": "IPC", "label": "Voluntarily causing hurt", "category": "Assault", "cognizable": false },
   { "code": "354", "act": "IPC", "label": "Assault on woman to outrage her modesty", "category": "Women & Child", "cognizable": true },

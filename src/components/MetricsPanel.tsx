@@ -10,6 +10,7 @@ const MODULES: { prefix: string; label: string }[] = [
   { prefix: 'fir.', label: 'FIR' },
   { prefix: 'challan.', label: 'e-Challan' },
   { prefix: 'dispatch.', label: 'ERSS-112' },
+  { prefix: 'nav.', label: 'Navigation' },
 ]
 
 function moduleStats(tools: { name: string; calls: number }[]) {
@@ -53,7 +54,7 @@ export default function MetricsPanel() {
         <Stat label="Avg call latency" value={fmt(snap.avgMs)} />
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         {moduleStats(snap.tools).map((m) => (
           <Stat key={m.label} label={`${m.label} calls (${m.distinct} tools)`} value={String(m.calls)} />
         ))}

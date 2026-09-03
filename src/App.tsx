@@ -18,9 +18,22 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('fir')
   const [toolsRegistered, setToolsRegistered] = useState(0)
 
+  // Listen for nav.switch_tab (WebMCP) so the agent can move the officer to the
+  // same module. The tool dispatches a `portal:tabchange` CustomEvent; the UI
+  // reacts by switching tabs live.
+  useEffect(() => {
+    const onTabChange = (e: Event) => {
+      const detail = (e as CustomEvent).detail
+      const next = detail?.tab as Tab | undefined
+      if (next && TABS.some((t) => t.id === next)) setTab(next)
+    }
+    window.addEventListener('portal:tabchange', onTabChange)
+    return () => window.removeEventListener('portal:tabchange', onTabChange)
+  }, [])
+
   useEffect(() => {
     let cancelled = false
-    // Register all 12 tools on first load so the full surface is available to an
+    // Register all 13 tools on first load so the full surface is available to an
     // agent immediately, regardless of which tab is open. Registration is
     // idempotent, so re-runs are safe no-ops.
     registerAllTools().then(async () => {

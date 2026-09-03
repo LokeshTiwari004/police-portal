@@ -1,7 +1,7 @@
 /**
  * Environment-agnostic tool definitions.
  *
- * The 12 portal tools (FIR / e-Challan / ERSS-112) are declared once here and
+ * The 13 portal tools (FIR / e-Challan / ERSS-112 / nav) are declared once here and
  * reused by two surfaces:
  *
  * - the browser, which registers them as WebMCP tools against
@@ -428,6 +428,44 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
           },
         })
         return JSON.stringify({ ok: true, unitId, escalated: false })
+      },
+      annotations: { readOnlyHint: false },
+    },
+  ]
+}
+
+export function getNavTools(): ToolDefinition[] {
+  return [
+    {
+      name: 'nav.switch_tab',
+      title: 'Switch portal tab',
+      description:
+        'Switch the portal to a different module tab (fir, challan, dispatch, metrics) ' +
+        'so the agent and officer are viewing the same screen. In the browser this ' +
+        'updates the live UI; over MCP it is a no-op that reports the requested tab.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          tab: {
+            type: 'string',
+            enum: ['fir', 'challan', 'dispatch', 'metrics'],
+            description: 'Which tab to switch to: fir, challan, dispatch, or metrics.',
+          },
+        },
+        required: ['tab'],
+      },
+      execute: async ({ tab }) => {
+        const target = String(tab ?? 'fir') as 'fir' | 'challan' | 'dispatch' | 'metrics'
+        // Browser only: dispatch a CustomEvent so the UI can react. Over MCP (no
+        // DOM window) this is a safe no-op that still reports the requested tab.
+        const g = globalThis as unknown as {
+          CustomEvent?: new (type: string, opts?: unknown) => { detail?: { tab?: string } }
+          dispatchEvent?: (e: unknown) => void
+        }
+        if (typeof g.CustomEvent === 'function' && typeof g.dispatchEvent === 'function') {
+          g.dispatchEvent(new g.CustomEvent('portal:tabchange', { detail: { tab: target } }))
+        }
+        return JSON.stringify({ ok: true, switchedTo: target })
       },
       annotations: { readOnlyHint: false },
     },

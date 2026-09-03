@@ -31,15 +31,16 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 - [x] **Validation parity by construction** — new `validateIncident(incident, sections)` in `validation.ts` mirrors the form's per-field rules (visible sections + `required`/`requiredWhen` + `rule`) and is used by BOTH `FIRForm` and the `fir.*` tools. Live-portal FAIL (tools only checked a 3-field subset; format rules never fired on dotted paths) fixed and pinned by `mcpBridge.test.ts` + eval harness.
 
 ### UI
-- [x] `App.tsx` — dashboard shell, registers all 12 tools on mount
+- [x] `App.tsx` — dashboard shell, registers all 13 tools on mount
 - [x] `components/FIRForm.tsx` — dynamic form from `formSchema.json`, conditional reveals, inline validation, missing-field summary, `requiredWhen`
 - [x] Wire form state → `incidentStore` (nested dotted-path updates)
 - [x] `components/FIRForm.test.tsx` (conditional reveals, requiredWhen, summary clearing)
+- [x] `nav.switch_tab` tool — agent switches the live tab (fires `portal:tabchange`; App listens)
 
 ### WebMCP tools (`fir.*`)
 - [x] `fir.identify_required_fields` (derives `requiredNow` from schema)
 - [x] `fir.fill_field` · `fir.flag_missing` · `fir.find_similar_cases` · `fir.validate_form` · `fir.submit`
-- [x] All 12 tools register on mount (full surface on load, not per tab); idempotent registration
+- [x] All 13 tools register on mount (full surface on load, not per tab); idempotent registration
 - [x] Tool descriptions + `title` polished for agent context (dotted paths ↔ form labels)
 
 ## ⚙️ Should-Have: e-Challan
@@ -104,12 +105,12 @@ Status shorthand: `[x]` shipped · `[ ]` open · `[~]` partial
 
 Tool definitions are shared: `src/lib/toolRegistry.ts` (env-agnostic, parameterised over an injected `Store`) is adapted to the browser (WebMCP via `webmcpTools.ts`) and to Node (MCP via `server/mcp-server.ts`).
 
-- [x] `src/lib/toolRegistry.ts` — env-agnostic definitions for all 12 tools
+- [x] `src/lib/toolRegistry.ts` — env-agnostic definitions for all 13 tools
 - [x] `src/lib/memoryStore.ts` — in-memory `Store` (no localStorage/document), mirrors browser metadata
 - [x] `server/mcp-server.ts` — stdio MCP server; `createPortalServer()` testable, `main()` runs only as entry
 - [x] `tsconfig.server.json` project reference — `npm run build` type-checks the server
 - [x] `npm run mcp` script
-- [x] Verified `tools/list` (12 tools + schema + readOnly) and `tools/call` (`fill_field` → `validate_form` → `submit`)
+- [x] Verified `tools/list` (13 tools + schema + readOnly) and `tools/call` (`fill_field` → `validate_form` → `submit`)
 - [x] Tests: `src/test/mcpBridge.test.ts` + `server/mcp-server.test.ts` (zod-optional regression)
 - [x] MCP eval harness: `npm run eval` (`server/eval-scenarios.ts`) → `docs/EVAL_RESULTS.md` — **7/7 PASS** (discovery, no dupes, E2E, robustness, conditional reveal, cross-module, latency)
 - [x] Fixed `jsonSchemaToZod` bug surfaced by the harness: empty `required` made all props mandatory → optional-arg tools rejected valid empty calls. Non-required props are now `.optional()`
@@ -118,6 +119,6 @@ Tool definitions are shared: `src/lib/toolRegistry.ts` (env-agnostic, parameteri
 ## 🧭 Notes / Decisions
 - **Shared model**: single `incidentStore` incident schema reused by all modules
 - **Tool namespacing**: `.` separators — WebMCP rejects `/` in tool names (`InvalidStateError`)
-- **Register all on mount**: all 12 tools on first load (not per tab); idempotent, so per-module calls are safe no-ops
+- **Register all on mount**: all 13 tools on first load (not per tab); idempotent, so per-module calls are safe no-ops
 - **Origin isolation**: WebMCP needs a secure, origin-keyed document; do NOT send `Origin-Agent-Cluster: ?0`. Chrome flag for localhost dev; prod Vercel HTTPS.
 - **Shared tool logic**: one `toolRegistry.ts` powers both the browser WebMCP surface and the Node MCP bridge — identical behavior

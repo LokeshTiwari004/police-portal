@@ -27,6 +27,9 @@
           "type": "multiselect",
           "required": true,
           "options": [
+            { "value": "SUO", "label": "SUO — Suo Moto (Police Initiated)" },
+            { "value": "279", "label": "279 — Hit and Run (rash driving)" },
+            { "value": "304A", "label": "304A — Hit and Run (death by negligence)" },
             { "value": "302", "label": "302 — Murder" },
             { "value": "323", "label": "323 — Voluntarily causing hurt" },
             { "value": "354", "label": "354 — Assault on woman to outrage modesty" },
@@ -48,6 +51,22 @@
         { "name": "accused.age", "label": "Approx. Age", "type": "number" },
         { "name": "accused.sex", "label": "Sex", "type": "select", "options": ["Male", "Female", "Other"] },
         { "name": "accused.description", "label": "Physical Description (when name unknown)", "type": "textarea", "requiredWhen": { "field": "accused.name", "isEmpty": true } }
+      ]
+    },
+    {
+      "id": "suoMoto",
+      "label": "SuO Moto FIR — Police Initiated",
+      "description": "This FIR is filed by police on their own initiative (Section 154 CrPC / Section 173 BNSS). Complainant details are optional.",
+      "dependsOn": { "field": "offense.sections", "includeAny": ["SUO"] },
+      "fields": []
+    },
+    {
+      "id": "hitAndRun",
+      "label": "Hit and Run — Vehicle Details",
+      "description": "Provide vehicle details for the hit-and-run incident.",
+      "dependsOn": { "field": "offense.sections", "includeAny": ["279", "304A"] },
+      "fields": [
+        { "name": "property", "label": "Vehicle / Evidence Description", "type": "repeat", "required": true }
       ]
     },
     {

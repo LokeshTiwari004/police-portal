@@ -10,7 +10,7 @@ Hackathon: **OpenAI WebMCP Challenge** (webmcp.devpost.com), deadline **Sep 3 20
 **Stage Two** — 4 **equally-weighted** judging criteria:
 | # | Criterion | What judges look for | Our evidence |
 |---|---|---|---|
-| 1 | **WebMCP Leverage** | Thorough/skillful use; genuine, non-trivial implementation | 12 registered tools (`fir.*`6, `challan.*`3, `dispatch.*`3), idempotent registration (no unregister API — no dup errors), shared store, schema-driven validation. Show `registerTool` + schemas in repo |
+| 1 | **WebMCP Leverage** | Thorough/skillful use; genuine, non-trivial implementation | 13 registered tools (`fir.*`6, `challan.*`3, `dispatch.*`3, `nav.*`1), idempotent registration (no unregister API — no dup errors), shared store, schema-driven validation. Show `registerTool` + schemas in repo |
 | 2 | **Execution** | Working/runnable, complete coherent product — not just tech PoC | Live URL, full form UI, inline errors, submit persists, challan+dispatch consuming same incident; test suite proves it runs |
 | 3 | **Potential Impact** | Credible specific case, real problem/real audience, solution actually addresses it | FIR Copilot: dual human+agent realtime form with validation parity — an officer + agent collaborate; supported by literature review |
 | 4 | **Creativity & Ambition** | Novel, differs from existing | Agent-native forms with conditional reveal + flag-for-human-review; cross-module incident lifecycle |
@@ -77,7 +77,7 @@ Per metric: target / actual / evidence → recorded in this doc's status table (
 
 | Metric | Target | Actual | Evidence |
 |---|---|---|---|
-| Tool discovery (6/3/3) | all present | 12 shown under DevTools→Application→WebMCP | vitest + live run (12 distinct, no dupes) |
+| Tool discovery (6/3/3/1) | all present | 13 shown under DevTools→Application→WebMCP | vitest + live run (13 distinct, no dupes) |
 | No duplicate tools | 0 dupes | 0 | vitest + MCP harness + live run |
 | E2E fill→validate→submit | 1 pass ≤60s | live agent ran full flow; 22 tool calls on Metrics page | vitest + live run |
 | Validation parity | 100% | `fir.validate_form` == UI by construction (`validateIncident` shared); live-run FAILs (3-field subset, format rules never firing) fixed | `validateIncident` + `mcpBridge.test.ts` + eval harness |
@@ -88,7 +88,7 @@ Per metric: target / actual / evidence → recorded in this doc's status table (
 ### Live-portal agent run (manual, browser-only evidence)
 
 A Codex in-app browser agent ran `docs/LIVE_PORTAL_EVAL.md` against the Vercel origin and
-reported **11 PASS / 7 FAIL / 1 BLOCKED**. PASSes: 12 tools live, idempotent across tab
+reported **11 PASS / 7 FAIL / 1 BLOCKED**. PASSes: 13 tools live, idempotent across tab
 switches, zero console errors/warnings, FIR live fills, IPC-379 conditional reveal, RC
 lookup, fine calc, dispatch classification/units/continuity, Metrics live telemetry (22
 calls). The 7 FAILs were real bugs and all are fixed in the current commit:
@@ -109,14 +109,14 @@ calls). The 7 FAILs were real bugs and all are fixed in the current commit:
    ERSS-112 calls + distinct tools, and a live validation-parity stat).
 
 The BLOCKED item (DevTools→Application→WebMCP panel) is a tool limitation (in-app browser
-has no DevTools); the 12-tool surface was verified via the agent's tool fetch.
+has no DevTools); the 13-tool surface was verified via the agent's tool fetch.
 
 
 ### Deterministic MCP harness (evidence, autonomous)
 
 `npm run eval` (`server/eval-scenarios.ts`) round-trips a real MCP Client against
 `createPortalServer` — the exact surface an external agent gets via `npm run mcp` — and
-writes `docs/EVAL_RESULTS.md`. Current: **9/9 PASS** — tool discovery (12, no dupes), E2E
+writes `docs/EVAL_RESULTS.md`. Current: **9/9 PASS** — tool discovery (13, no dupes), E2E
 fill→validate→submit (full contract: id/firNumber/status), robustness (incomplete form +
 submit refused), format parity (bad phone/email surfaced), conditional reveal
 (theft→`property`), **challan linked to the same FIR** (`firNumber` continuity),
@@ -129,7 +129,7 @@ property mandatory when `required` was empty, so optional-arg tools like
 (non-required props are optional), pinned by `server/mcp-server.test.ts`, and exercised by
 the harness's cross-module scenario.
 
-The browser-only metrics (12 tools under DevTools→WebMCP on the Vercel origin, Tool
+The browser-only metrics (13 tools under DevTools→WebMCP on the Vercel origin, Tool
 Inspector-driven prod calls + Metrics counts, dual human+agent editing, parity on live form,
 console cleanliness, demo video) are covered by the live-portal driver prompt in
 `docs/LIVE_PORTAL_EVAL.md`.
