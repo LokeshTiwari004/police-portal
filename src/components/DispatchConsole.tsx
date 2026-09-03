@@ -33,24 +33,23 @@ function classifyNature(text: string): { code: string; label: string } {
 }
 
 export default function DispatchConsole() {
-  const [incidents, setIncidents] = useState<Incident[]>(() => incidentStore.list())
   const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
   const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
-  const [activeId, setActiveId] = useState<string>(() => incidentStore.list()[0]?.id ?? '')
+  const [activeId, setActiveId] = useState<string>('')
   const [linkedFirId, setLinkedFirId] = useState<string>('')
   const [newCall, setNewCall] = useState('')
   const [newChannel, setNewChannel] = useState<'Voice' | 'SMS' | 'WhatsApp'>('Voice')
 
   useEffect(() => {
     return incidentStore.subscribe((incidents) => {
-      setIncidents(incidents)
       setAllIncidents(incidents)
       if (activeId && !incidents.some((i) => i.id === activeId)) setActiveId(incidents[0]?.id ?? '')
     })
   }, [activeId])
 
-  // The officer selects a specific record to work on (default: most recent).
-  const selected = activeId ? allIncidents.find((i) => i.id === activeId) ?? incidents[0] : incidents[0]
+  // The officer selects a specific record to work on; until then nothing is
+  // pre-selected (no seed record auto-fills the view).
+  const selected = activeId ? allIncidents.find((i) => i.id === activeId) : undefined
   const shown = filterIncidents(allIncidents, filter)
 
   function createStandaloneCall() {
@@ -179,6 +178,14 @@ export default function DispatchConsole() {
         </div>
       </section>
 
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={selected?.id}
+        onFilter={setFilter}
+        onSelect={(inc) => setActiveId(inc.id)}
+      />
+
       {shown.length === 0 ? (
         <p className="text-slate-600">No incidents match the filters. File an FIR, log a 112 call above, or clear a filter.</p>
       ) : (
@@ -244,14 +251,6 @@ export default function DispatchConsole() {
           )
         })
       )}
-
-      <RecordBrowser
-        incidents={allIncidents}
-        filter={filter}
-        activeId={selected?.id}
-        onFilter={setFilter}
-        onSelect={(inc) => setActiveId(inc.id)}
-      />
     </div>
   )
 }

@@ -8,7 +8,7 @@ import FIRForm from '../components/FIRForm'
 
 /**
  * Validation parity test.
- *
+
  * The UI (FIRForm) and the WebMCP tools (fir.validate_form, fir.submit) share
  * validation.ts but feed it from different paths. A parity regression is when
  * the human's form and the agent's tool disagree about a field — e.g. the old
@@ -16,18 +16,19 @@ import FIRForm from '../components/FIRForm'
  * it. This locks agreement on the shared three-field contract.
  */
 
-function currentIncident() {
-  return incidentStore.list()[0] ?? incidentStore.create()
-}
-
 describe('validation parity: FIRForm UI vs fir.validate_form tool', () => {
   beforeEach(clearStore)
 
   it('both the UI and the tool flag an empty narrative as required', () => {
-    const inc = currentIncident()
-    incidentStore.update(inc.id, {
-      complainant: { name: 'Alice', phone: '9876543210' },
-      narrative: '',
+    // FIRForm starts on a fresh blank draft; fill it (minus the mandatory
+    // narrative) the same way the officer would.
+    render(<FIRForm />)
+    const inc = incidentStore.list()[0]
+    act(() => {
+      incidentStore.update(inc.id, {
+        complainant: { name: 'Alice', phone: '9876543210' },
+        narrative: '',
+      })
     })
 
     // Tool path (same flat shape fir.validate_form and fir.submit build).
@@ -40,17 +41,19 @@ describe('validation parity: FIRForm UI vs fir.validate_form tool', () => {
     expect(tool.errors['narrative']).toMatch(/required/)
 
     // UI path — the rendered FIRForm must surface the same narrative error.
-    render(<FIRForm />)
     expect(screen.getByLabelText(/Narrative/).className).toMatch(/border-red-400/)
     expect(screen.getAllByText(/This field is required\./).length).toBeGreaterThan(0)
   })
 
   it('both the UI and the tool accept a fully filled shared contract', () => {
-    const inc = currentIncident()
-    incidentStore.update(inc.id, {
-      complainant: { name: 'Alice', phone: '9876543210' },
-      offense: { sections: ['379'] },
-      narrative: 'Bike stolen while parked',
+    render(<FIRForm />)
+    const inc = incidentStore.list()[0]
+    act(() => {
+      incidentStore.update(inc.id, {
+        complainant: { name: 'Alice', phone: '9876543210' },
+        offense: { sections: ['379'] },
+        narrative: 'Bike stolen while parked',
+      })
     })
 
     const tool = validateForm({
@@ -61,7 +64,6 @@ describe('validation parity: FIRForm UI vs fir.validate_form tool', () => {
     expect(tool.valid).toBe(true)
 
     // The Narrative field no longer carries a required error in the UI.
-    render(<FIRForm />)
     expect(screen.getByLabelText(/Narrative/).className).not.toMatch(/border-red-400/)
   })
 

@@ -37,9 +37,8 @@ function fineFor(offenseCode: string, vehicleClass: string): number {
  * subscribes to the store so a challan created by an agent tool appears live.
  */
 export default function ChallanGenerator() {
-  const [incident, setIncident] = useState<Incident | undefined>(() => incidentStore.list()[0])
   const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
-  const [activeId, setActiveId] = useState<string>(() => incidentStore.list()[0]?.id ?? '')
+  const [activeId, setActiveId] = useState<string>('')
   const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
   const [linkedFirId, setLinkedFirId] = useState<string>('')
   const [rcNumber, setRcNumber] = useState('')
@@ -50,17 +49,17 @@ export default function ChallanGenerator() {
 
   useEffect(() => {
     return incidentStore.subscribe((incidents) => {
-      setIncident(incidents[0])
       setAllIncidents(incidents)
     })
   }, [])
 
-  // The officer can select any record in the browser; default to the most recent.
-  const selected =
-    (activeId ? allIncidents.find((i) => i.id === activeId) : undefined) ?? incident
+  // The officer selects a record from the browser before editing; until then the
+  // form stays blank instead of auto-picking (and pre-filling with) a seed record.
+  const selected = activeId ? allIncidents.find((i) => i.id === activeId) : undefined
   const saved = selected?.challan
   const linkedInc = linkedFirId ? allIncidents.find((i) => i.id === linkedFirId) : undefined
   const hasFIR = linkedInc && linkedInc.complainant.name && linkedInc.offense.sections.length > 0
+  const standalone = !selected || (!selected.complainant.name && !selected.offense.sections.length)
 
   function lookupRc() {
     const rec = RC_DB.find((r) => r.rcNumber.toUpperCase() === rcNumber.toUpperCase().trim())
@@ -114,7 +113,7 @@ export default function ChallanGenerator() {
 
   return (
     <div className="space-y-5">
-      {selected && !selected.complainant.name && !selected.offense.sections.length && (
+      {standalone && (
         <div className="bg-blue-50 border border-blue-200 text-blue-800 text-sm px-4 py-3 rounded-md">
           Standalone challan mode — no FIR required. Issue a traffic challan independently.
         </div>
@@ -207,13 +206,22 @@ export default function ChallanGenerator() {
           {hasFIR && <span className="text-xs text-slate-500">Linked to {linkedInc?.firNumber}</span>}
           {!hasFIR && selected && <span className="text-xs text-slate-500">Working on {selected.firNumber}</span>}
         </div>
-        {saved && (
-          <div className="mt-3 rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">
-            Challan for <strong>{saved.rcNumber}</strong> · Section {saved.offenseCode} · ₹{saved.fineAmount}
-            {hasFIR && <> on <strong>{linkedInc?.firNumber}</strong></>}
-          </div>
-        )}
       </section>
+
+      <RecordBrowser
+        incidents={allIncidents}
+        filter={filter}
+        activeId={activeId}
+        onFilter={setFilter}
+        onSelect={(inc) => setActiveId(inc.id)}
+      />
+
+      {saved && (
+        <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">
+          Challan for <strong>{saved.rcNumber}</strong> · Section {saved.offenseCode} · ₹{saved.fineAmount}
+          {hasFIR && <> on <strong>{linkedInc?.firNumber}</strong></>}
+        </div>
+      )}
 
       {saved && !saved.paid && !saved.courtSummons && (
         <section className="rounded border border-amber-200 bg-amber-50 p-4">
@@ -240,14 +248,6 @@ export default function ChallanGenerator() {
           </dl>
         </section>
       )}
-
-      <RecordBrowser
-        incidents={allIncidents}
-        filter={filter}
-        activeId={activeId}
-        onFilter={setFilter}
-        onSelect={(inc) => setActiveId(inc.id)}
-      />
     </div>
   )
 }

@@ -23,7 +23,9 @@ function setValue(inc: Incident, path: string, value: unknown): Incident {
 }
 
 export default function FIRForm() {
-  const [incident, setIncident] = useState<Incident>(() => incidentStore.list()[0] ?? incidentStore.create())
+  // Start on a fresh blank draft so a seeded record never auto-fills the form.
+  // The officer picks any existing record from the browser to edit it.
+  const [incident, setIncident] = useState<Incident>(() => incidentStore.create())
   const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
   const [filter, setFilter] = useState<RecordFilter>(defaultFilter)
   const [submitted, setSubmitted] = useState(false)
@@ -36,7 +38,8 @@ export default function FIRForm() {
   useEffect(() => {
     return incidentStore.subscribe((incidents) => {
       setAllIncidents(incidents)
-      setIncident(incidents.find((i) => i.id === incident.id) ?? incidents[0] ?? incidentStore.create())
+      const stillLive = incidents.find((i) => i.id === incident.id)
+      if (stillLive) setIncident(stillLive)
     })
   }, [incident.id])
 
