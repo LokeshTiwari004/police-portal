@@ -32,29 +32,48 @@ function classifyNature(text: string): { code: string; label: string } {
 
 export default function DispatchConsole() {
   const [incidents, setIncidents] = useState<Incident[]>(() => incidentStore.list())
+  const [allIncidents, setAllIncidents] = useState<Incident[]>(() => incidentStore.list())
+  const [linkedFirId, setLinkedFirId] = useState<string>('')
   const [newCall, setNewCall] = useState('')
   const [newChannel, setNewChannel] = useState<'Voice' | 'SMS' | 'WhatsApp'>('Voice')
 
   useEffect(() => {
-    return incidentStore.subscribe(setIncidents)
+    return incidentStore.subscribe((incidents) => {
+      setIncidents(incidents)
+      setAllIncidents(incidents)
+    })
   }, [])
 
   function createStandaloneCall() {
     if (!newCall.trim()) return
     const nature = classifyNature(newCall)
-    incidentStore.create({
-      complainant: { name: 'Emergency Caller' },
-      offense: { sections: [] },
-      accused: {},
-      narrative: newCall,
-      dispatch: {
-        channel: newChannel,
-        natureCode: nature.code,
-        priority: nature.code === 'MED-001' ? 'immediate' : 'urgent',
-        location: { lat: 26.8467, lng: 80.9462, label: 'Lucknow, UP' },
-      },
-    })
+    const linkedInc = linkedFirId ? allIncidents.find((i) => i.id === linkedFirId) : undefined
+    if (linkedInc) {
+      incidentStore.update(linkedInc.id, {
+        status: 'dispatched',
+        dispatch: {
+          channel: newChannel,
+          natureCode: nature.code,
+          priority: nature.code === 'MED-001' ? 'immediate' : 'urgent',
+          location: { lat: 26.8467, lng: 80.9462, label: 'Lucknow, UP' },
+        },
+      })
+    } else {
+      incidentStore.create({
+        complainant: { name: 'Emergency Caller' },
+        offense: { sections: [] },
+        accused: {},
+        narrative: newCall,
+        dispatch: {
+          channel: newChannel,
+          natureCode: nature.code,
+          priority: nature.code === 'MED-001' ? 'immediate' : 'urgent',
+          location: { lat: 26.8467, lng: 80.9462, label: 'Lucknow, UP' },
+        },
+      })
+    }
     setNewCall('')
+    setLinkedFirId('')
   }
 
   function assign(id: string, unitId: string) {
@@ -105,6 +124,21 @@ export default function DispatchConsole() {
 
       <section className="rounded border border-slate-200 p-4">
         <h3 className="font-semibold mb-2">New 112 call</h3>
+        <div className="mb-2">
+          <label className="block text-xs text-slate-500 mb-1">Attach to FIR (optional)</label>
+          <select
+            value={linkedFirId}
+            onChange={(e) => setLinkedFirId(e.target.value)}
+            className="rounded border border-slate-300 px-3 py-2 text-sm w-full"
+          >
+            <option value="">— Standalone (no FIR) —</option>
+            {allIncidents.filter((i) => i.complainant.name || i.offense.sections.length > 0).map((i) => (
+              <option key={i.id} value={i.id}>
+                {i.firNumber} — {i.complainant.name || 'Unnamed'} ({i.status})
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex gap-2">
           <select
             value={newChannel}
