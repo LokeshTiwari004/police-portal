@@ -130,8 +130,6 @@ export default function DispatchConsole() {
         Standalone 112 calls work independently — no FIR required. File an FIR later if needed.
       </div>
 
-      {selected && <RecordDetail inc={selected} />}
-
       <section className="rounded border border-slate-200 p-4">
         <h3 className="font-semibold mb-2">New 112 call</h3>
         <div className="mb-2">
@@ -185,6 +183,8 @@ export default function DispatchConsole() {
         onFilter={setFilter}
         onSelect={(inc) => setActiveId(inc.id)}
       />
+
+      {selected && <RecordDetail inc={selected} />}
 
       {shown.length === 0 ? (
         <p className="text-slate-600">No incidents match the filters. File an FIR, log a 112 call above, or clear a filter.</p>

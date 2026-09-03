@@ -119,8 +119,6 @@ export default function ChallanGenerator() {
         </div>
       )}
 
-      {selected && <RecordDetail inc={selected} />}
-
       <section className="grid md:grid-cols-2 gap-4">
         <div className="rounded border border-slate-200 p-4">
           <h3 className="font-semibold mb-2">1 · Look up vehicle (RC)</h3>
@@ -215,6 +213,8 @@ export default function ChallanGenerator() {
         onFilter={setFilter}
         onSelect={(inc) => setActiveId(inc.id)}
       />
+
+      {selected && <RecordDetail inc={selected} />}
 
       {saved && (
         <div className="rounded border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm px-3 py-2">
