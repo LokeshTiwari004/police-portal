@@ -1,6 +1,6 @@
 # EVAL RESULTS — external-agent MCP harness
 
-Run: 2026-09-03T14:26:16.072Z
+Run: 2026-09-03T15:21:46.129Z
 Surface: real MCP Client <-> createPortalServer (same server as `npm run mcp`)
 Result: **9/9 PASS** — all green
 
