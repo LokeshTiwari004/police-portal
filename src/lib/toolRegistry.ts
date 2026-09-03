@@ -1,8 +1,8 @@
 /**
  * Environment-agnostic tool definitions.
  *
- * The 13 portal tools (FIR / e-Challan / ERSS-112 / nav) are declared once here and
- * reused by two surfaces:
+ * The portal tools (FIR / e-Challan / ERSS-112 / record / nav) are declared once
+ * here and reused by two surfaces:
  *
  * - the browser, which registers them as WebMCP tools against
  *   `document.modelContext` (see `webmcpTools.ts`), and
@@ -18,7 +18,7 @@
 export interface Store<T> {
   list(): T[]
   /** Create a record with generated id / firNumber / createdAt / status. */
-  create(data?: Partial<T>): T
+  create(data?: Partial<T>, opts?: { firNumber?: string; id?: string }): T
   /** Persist a partial update; returns the updated record or undefined. */
   update(id: string, patch: Partial<T>): T | undefined
   get(id: string): T | undefined
@@ -105,6 +105,33 @@ export interface ToolDefinition {
   annotations?: { readOnlyHint?: boolean; untrustedContentHint?: boolean }
 }
 
+/**
+ * Module-global "selected record" focus. `record.select` sets it so subsequent
+ * tool calls (which default to the most recent record) can target an explicit
+ * record by id OR the most recently selected one. `recordId` passed directly
+ * to a tool always wins over the focus. Over MCP each server has its own
+ * factory closure; the browser keeps one per page. Reset via `resetRecordFocus`
+ * (test seam).
+ */
+let focusedRecordId: string | undefined
+
+export function resetRecordFocus() {
+  focusedRecordId = undefined
+}
+
+/** Resolve which incident a tool should act on: explicit id > focused > most recent. */
+function resolveTarget(store: Store<Incident>, recordId?: unknown): Incident | undefined {
+  if (recordId && typeof recordId === 'string') {
+    const byId = store.get(recordId)
+    if (byId) return byId
+  }
+  if (focusedRecordId) {
+    const focused = store.get(focusedRecordId)
+    if (focused) return focused
+  }
+  return store.list()[0]
+}
+
 export function getFirTools(store: Store<Incident>): ToolDefinition[] {
   return [
     {
@@ -121,11 +148,12 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
             items: { type: 'string' },
             description: 'IPC / special-act section codes, e.g. ["379"] (must match formSchema option values).',
           },
+          recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' },
         },
         required: ['sections'],
       },
-      execute: async ({ sections }) => {
-        const incident = store.list()[0] || store.create()
+      execute: async ({ sections, recordId }) => {
+        const incident = resolveTarget(store, recordId) || store.create()
         const list = (sections as string[]) ?? []
         const hidden = requiredFieldsForSections(list)
         return JSON.stringify({
@@ -154,11 +182,12 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
               "accused.description, narrative. Conditional (shown for some sections): property, witnesses.",
           },
           value: { description: 'Value to set. Use a string for text, array of strings for offense.sections/property.', type: ['string', 'number', 'boolean', 'array'] },
+          recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' },
         },
         required: ['field', 'value'],
       },
-      execute: async ({ field, value }) => {
-        const incident = store.list()[0] || store.create()
+      execute: async ({ field, value, recordId }) => {
+        const incident = resolveTarget(store, recordId) || store.create()
         const parts = (field as string).split('.')
         const updated: Incident = JSON.parse(JSON.stringify(incident))
         let ref: any = updated as any
@@ -198,11 +227,12 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
             description: 'Dotted field paths that are incomplete or ambiguous (e.g. ["complainant.address"]).',
           },
           reason: { type: 'string', description: 'Why these need human review.' },
+          recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' },
         },
         required: ['fields'],
       },
-      execute: async ({ fields, reason }) => {
-        const incident = store.list()[0] || store.create()
+      execute: async ({ fields, reason, recordId }) => {
+        const incident = resolveTarget(store, recordId) || store.create()
         const existing = new Set(incident.missingFields || [])
         ;(fields as string[]).forEach((f) => existing.add(f))
         store.update(incident.id, {
@@ -218,9 +248,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       description:
         "Validate the whole FIR form. Returns { valid, errors } with field -> message. " +
         "Matches what the on-screen form shows.",
-      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      execute: async () => {
-        const incident = store.list()[0] || store.create()
+      inputSchema: { type: 'object', properties: { recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' } } },
+      execute: async ({ recordId }) => {
+        const incident = resolveTarget(store, recordId) || store.create()
         const { valid, errors } = validateIncident(incident, FIR_SCHEMA)
         return JSON.stringify({ valid, errors, firNumber: incident.firNumber, id: incident.id })
       },
@@ -232,9 +262,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       description:
         'Submit the completed FIR after it passes full-form validation. Rejects with ' +
         'errors if any required field is missing/invalid. Returns the persisted record id, firNumber and status.',
-      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      execute: async () => {
-        const incident = store.list()[0]
+      inputSchema: { type: 'object', properties: { recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' } } },
+      execute: async ({ recordId }) => {
+        const incident = resolveTarget(store, recordId)
         if (!incident) return JSON.stringify({ ok: false, error: 'No incident in progress' })
         const { valid, errors } = validateIncident(incident, FIR_SCHEMA)
         if (!valid) {
@@ -282,6 +312,72 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
         return JSON.stringify({ count: matches.length, matches })
       },
       annotations: { readOnlyHint: true },
+    },
+    {
+      name: 'fir.create',
+      title: 'Create a new FIR record',
+      description:
+        'Create a fresh, blank FIR record and make it the selected record. ' +
+        'Optionally pre-seed the complainant name and offense sections. Returns the new record id and firNumber.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          complainantName: { type: 'string', description: 'Optional complainant name to pre-fill.' },
+          sections: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Optional IPC section codes to pre-fill, e.g. ["279", "304A"] for a hit-and-run / rash driving.' },
+          narrative: { type: 'string', description: 'Optional narrative describing the incident.' },
+        },
+      },
+      execute: async ({ complainantName, sections, narrative }) => {
+        const incident = store.create({
+          complainant: { name: String(complainantName ?? '') },
+          offense: { sections: (sections as string[]) ?? [] },
+          accused: {},
+          narrative: String(narrative ?? ''),
+        })
+        focusedRecordId = incident.id
+        return JSON.stringify({ ok: true, id: incident.id, firNumber: incident.firNumber, status: incident.status })
+      },
+      annotations: { readOnlyHint: false },
+    },
+    {
+      name: 'fir.link_erss',
+      title: 'Link an FIR to an originating ERSS-112 call',
+      description:
+        'Record that an FIR/escalated record was created from an ERSS-112 call so the officer ' +
+        'can see the source. Pass the ERSS record id (or the message id). Sets sourceErss on the FIR.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          erssId: { type: 'string', description: 'The ERSS-112 record id to reference.' },
+          recordId: { type: 'string', description: 'The FIR incident id to link (defaults to selected/most recent).' },
+        },
+        required: ['erssId'],
+      },
+      execute: async ({ erssId, recordId }) => {
+        const erss = store.get(String(erssId ?? ''))
+        if (!erss) return JSON.stringify({ ok: false, error: 'ERSS record not found', erssId })
+        const linkErssNumber = erss.firNumber
+        const fir = resolveTarget(store, recordId)
+        if (!fir) return JSON.stringify({ ok: false, error: 'No FIR to link' })
+        store.update(fir.id, {
+          sourceErss: {
+            id: erss.id,
+            erssNumber: erss.firNumber,
+            linkErssNumber,
+          },
+        })
+        return JSON.stringify({
+          ok: true,
+          firId: fir.id,
+          firNumber: fir.firNumber,
+          linkedErssNumber: erss.firNumber,
+          linkErssNumber,
+        })
+      },
+      annotations: { readOnlyHint: false },
     },
   ]
 }
@@ -342,10 +438,11 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
           rcNumber: { type: 'string', description: 'Vehicle registration number from challan.lookup_rc.' },
           offenseCode: { type: 'string', description: 'MVA section code used to compute the fine.' },
           fineAmount: { type: 'number', description: 'Fine in rupees from challan.auto_calculate_fine.' },
+          recordId: { type: 'string', description: 'Incident id to attach the challan to (defaults to selected/most recent).' },
         },
       },
-      execute: async ({ rcNumber, offenseCode, fineAmount }) => {
-        const incident = store.list()[0]
+      execute: async ({ rcNumber, offenseCode, fineAmount, recordId }) => {
+        const incident = resolveTarget(store, recordId)
         if (!incident) return JSON.stringify({ ok: false, error: 'No incident in progress' })
         const updated = store.update(incident.id, {
           challan: {
@@ -405,6 +502,54 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
       annotations: { readOnlyHint: true },
     },
     {
+      name: 'erss.create_call',
+      title: 'Create an ERSS-112 call',
+      description:
+        'Create a standalone ERSS-112 emergency call from a free-text description. ' +
+        'Classifies the nature, sets priority (immediate for medical) and makes it the selected record. ' +
+        'Returns the record id, erssNumber and the classified nature.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          description: { type: 'string', description: 'Free-text emergency description, e.g. "hit and run on MG Road".' },
+          channel: { type: 'string', enum: ['Voice', 'SMS', 'WhatsApp'], description: 'Reporting channel (default Voice).' },
+        },
+        required: ['description'],
+      },
+      execute: async ({ description, channel }) => {
+        const text = String(description ?? '')
+        const lower = text.toLowerCase()
+        const rule = NATURE_RULES.find((r) => r.keywords.some((k) => lower.includes(k)))
+        const natureCode = rule?.natureCode ?? 'GEN-000'
+        const seq = store.list().length + 1
+        const call = store.create(
+          {
+            complainant: { name: 'Emergency Caller' },
+            offense: { sections: [] },
+            accused: {},
+            narrative: text,
+            dispatch: {
+              channel: channel === 'SMS' || channel === 'WhatsApp' ? channel : 'Voice',
+              natureCode,
+              priority: natureCode === 'MED-001' ? 'immediate' : 'urgent',
+              location: { lat: 26.8467, lng: 80.9462, label: 'Lucknow, UP' },
+            },
+          },
+          { firNumber: `ERS-2025-${String(seq).padStart(6, '0')}` },
+        )
+        focusedRecordId = call.id
+        return JSON.stringify({
+          ok: true,
+          id: call.id,
+          erssNumber: call.firNumber,
+          firNumber: call.firNumber,
+          natureCode,
+          label: rule?.label ?? 'General',
+        })
+      },
+      annotations: { readOnlyHint: false },
+    },
+    {
       name: 'dispatch.assign_unit',
       title: 'Assign response unit to incident',
       description:
@@ -413,12 +558,13 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
         type: 'object',
         properties: {
           unitId: { type: 'string', description: 'Unit id from dispatch.get_available_units, e.g. PCR-88.' },
-          incidentId: { type: 'string', description: 'Incident id; defaults to the active incident.' },
+          recordId: { type: 'string', description: 'Incident id; defaults to the selected/most recent incident.' },
+          incidentId: { type: 'string', description: 'Deprecated alias for recordId.' },
         },
         required: ['unitId'],
       },
-      execute: async ({ unitId, incidentId }) => {
-        const incident = incidentId ? store.get(incidentId as string) : store.list()[0]
+      execute: async ({ unitId, recordId, incidentId }) => {
+        const incident = resolveTarget(store, recordId ?? incidentId)
         if (!incident) return JSON.stringify({ ok: false, error: 'No incident' })
         store.update(incident.id, {
           status: 'dispatched',
@@ -427,7 +573,89 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
             unit: { id: unitId as string, type: 'Ambulance', etaMinutes: 4 },
           },
         })
-        return JSON.stringify({ ok: true, unitId, escalated: false })
+        return JSON.stringify({ ok: true, recordId: incident.id, unitId, escalated: false })
+      },
+      annotations: { readOnlyHint: false },
+    },
+  ]
+}
+
+export function getRecordTools(store: Store<Incident>): ToolDefinition[] {
+  return [
+    {
+      name: 'record.list',
+      title: 'List incidents/records',
+      description:
+        'List portal records (FIR / e-Challan / ERSS-112) with optional filters. ' +
+        'Returns id, firNumber, status and which modules each record spans. Use this to discover a record id before acting on it.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          module: {
+            type: 'string',
+            enum: ['fir', 'challan', 'dispatch', ''],
+            description: 'Optional module filter: fir, challan, dispatch, or empty for all.',
+          },
+          status: { type: 'string', description: 'Optional status filter (draft, acknowledged, dispatched, closed).' },
+          text: { type: 'string', description: 'Optional free-text search across firNumber / complainant / narrative / RC.' },
+        },
+      },
+      execute: async ({ module, status, text }) => {
+        const q = String(text ?? '').toLowerCase()
+        const recs = store
+          .list()
+          .filter((inc) => {
+            if (status && inc.status !== String(status)) return false
+            const challan = !!inc.challan
+            const dispatch = !!inc.dispatch
+            const fir = !challan && !dispatch
+            if (module === 'fir' && !fir) return false
+            if (module === 'challan' && !challan) return false
+            if (module === 'dispatch' && !dispatch) return false
+            if (!q) return true
+            return (
+              inc.firNumber.toLowerCase().includes(q) ||
+              (inc.complainant.name || '').toLowerCase().includes(q) ||
+              (inc.narrative || '').toLowerCase().includes(q) ||
+              (inc.challan?.rcNumber || '').toLowerCase().includes(q)
+            )
+          })
+          .map((inc) => {
+            const badges: string[] = []
+            const hasChallan = !!inc.challan
+            const hasDispatch = !!inc.dispatch
+            const hasFir = !hasChallan && !hasDispatch
+            if (hasFir) badges.push('fir')
+            if (hasChallan) badges.push('challan')
+            if (hasDispatch) badges.push('dispatch')
+            if (inc.sourceErss) badges.push('linked-to-erss')
+            return {
+              id: inc.id,
+              firNumber: inc.firNumber,
+              status: inc.status,
+              modules: badges,
+            }
+          })
+        return JSON.stringify({ count: recs.length, records: recs })
+      },
+      annotations: { readOnlyHint: true },
+    },
+    {
+      name: 'record.select',
+      title: 'Select the active record',
+      description:
+        'Set the "selected record" that later tool calls (fir.fill_field, challan.submit, dispatch.*) ' +
+        'act on by default when no recordId is passed.',
+      inputSchema: {
+        type: 'object',
+        properties: { recordId: { type: 'string', description: 'The incident id to select (from record.list).' } },
+        required: ['recordId'],
+      },
+      execute: async ({ recordId }) => {
+        const incident = store.get(String(recordId ?? ''))
+        if (!incident) return JSON.stringify({ ok: false, error: 'Record not found', recordId })
+        focusedRecordId = incident.id
+        return JSON.stringify({ ok: true, selected: { id: incident.id, firNumber: incident.firNumber, status: incident.status } })
       },
       annotations: { readOnlyHint: false },
     },

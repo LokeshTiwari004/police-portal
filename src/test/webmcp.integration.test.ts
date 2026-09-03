@@ -39,7 +39,7 @@ describe('fir.* tools integrate with incidentStore', () => {
     const mc = mockModelContext()
     await registerTools('fir')
     const afterFirst = mc.registered.length
-    expect(afterFirst).toBe(6)
+    expect(afterFirst).toBe(8)
 
     // Second call with the same module — e.g. React StrictMode's double-effect
     // mount in dev, or clicking back onto the FIR tab. No console warnings, and
@@ -68,9 +68,9 @@ describe('fir.* tools integrate with incidentStore', () => {
       console.warn = warn
     }
     expect(warnings).toHaveLength(0)
-    expect(mc.registered.length).toBe(13)
+    expect(mc.registered.length).toBe(18)
     const names = mc.registered.map((t) => t.name)
-    for (const name of ['fir.submit', 'challan.lookup_rc', 'dispatch.assign_unit', 'nav.switch_tab']) {
+    for (const name of ['fir.submit', 'fir.create', 'challan.lookup_rc', 'dispatch.assign_unit', 'erss.create_call', 'record.list', 'record.select', 'nav.switch_tab']) {
       expect(names).toContain(name)
     }
   })

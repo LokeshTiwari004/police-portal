@@ -53,6 +53,14 @@ export interface Incident {
   narrative: string
   missingFields: string[] // fields flagged for human review
 
+  // Cross-module link: this FIR/escalated record was created from an ERSS-112
+  // call. One-way reference (FIR -> ERSS); set by fir.create / fir.link_erss.
+  sourceErss?: {
+    id: string
+    erssNumber: string
+    linkErssNumber: string
+  }
+
   // e-Challan (module: Challan)
   challan?: {
     rcNumber: string

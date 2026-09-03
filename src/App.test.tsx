@@ -44,17 +44,22 @@ describe('App shell', () => {
     expect(screen.getByText(/Complainant Details/)).toBeInTheDocument()
   })
 
-  it('registers 13 tools on first load, independent of the open tab', async () => {
+  it('registers all 18 tools on first load, independent of the open tab', async () => {
     const mc = mockModelContext()
     render(<App />)
 
-    await waitFor(() => expect(mc.registered.length).toBe(13))
+    await waitFor(() => expect(mc.registered.length).toBe(18))
     const names = mc.registered.map((t) => t.name)
     expect(names).toEqual(
       expect.arrayContaining([
         'fir.fill_field',
+        'fir.create',
+        'fir.link_erss',
         'challan.lookup_rc',
         'dispatch.assign_unit',
+        'erss.create_call',
+        'record.list',
+        'record.select',
         'nav.switch_tab',
       ]),
     )

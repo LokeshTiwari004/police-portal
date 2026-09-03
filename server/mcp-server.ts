@@ -1,10 +1,10 @@
 /**
  * External-agent MCP bridge.
  *
- * Exposes the same 12 portal tools (FIR / e-Challan / ERSS-112) over the Model
- * Context Protocol so an *external* agent — Claude Desktop, VS Code Copilot,
- * any MCP client — can drive the portal, independent of the in-browser WebMCP
- * integration.
+ * Exposes the same portal tools (FIR / e-Challan / ERSS-112 / record / nav)
+ * over the Model Context Protocol so an *external* agent — Claude Desktop, VS
+ * Code Copilot, any MCP client — can drive the portal, independent of the
+ * in-browser WebMCP integration.
  *
  * The tool definitions live in `src/lib/toolRegistry.ts` and are shared with the
  * browser's WebMCP registration. Here we inject an **in-memory** `Store` (the
@@ -20,7 +20,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
 import type { Incident } from '../src/lib/incidentStore'
-import { getFirTools, getChallanTools, getDispatchTools, getNavTools, type Store, type ToolDefinition } from '../src/lib/toolRegistry'
+import { getFirTools, getChallanTools, getDispatchTools, getRecordTools, getNavTools, type Store, type ToolDefinition } from '../src/lib/toolRegistry'
 import { createMemoryStore } from '../src/lib/memoryStore'
 
 /** Convert our JSON-schema `inputSchema` into a zod schema the MCP SDK requires. */
@@ -72,10 +72,10 @@ function registerToolOnServer(server: McpServer, tool: ToolDefinition) {
   })
 }
 
-/** Build an MCP server with all 12 portal tools registered against a fresh in-memory store. */
+/** Build an MCP server with all portal tools registered against a fresh in-memory store. */
 export function createPortalServer(store: Store<Incident> = createMemoryStore()): { server: McpServer; store: Store<Incident> } {
   const server = new McpServer({ name: 'police-portal', version: '1.0.0' })
-  getFirTools(store).concat(getChallanTools(store), getDispatchTools(store), getNavTools()).forEach((t) => registerToolOnServer(server, t))
+  getFirTools(store).concat(getChallanTools(store), getDispatchTools(store), getRecordTools(store), getNavTools()).forEach((t) => registerToolOnServer(server, t))
   return { server, store }
 }
 

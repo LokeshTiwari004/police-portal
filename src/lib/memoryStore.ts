@@ -15,19 +15,20 @@ export function createMemoryStore(): Store<Incident> {
   let seq = 0
   return {
     list: () => incidents,
-    create(data: Partial<Incident> = {}) {
+    create(data: Partial<Incident> = {}, opts?: { firNumber?: string; id?: string }) {
       seq += 1
       const incident: Incident = {
-        id: crypto.randomUUID(),
-        firNumber: `FIR-2025-${String(seq).padStart(6, '0')}`,
+        ...data,
+        id: opts?.id ?? crypto.randomUUID(),
+        firNumber: opts?.firNumber ?? `FIR-2025-${String(seq).padStart(6, '0')}`,
         createdAt: new Date().toISOString(),
-        status: 'draft',
+        status: data.status ?? 'draft',
         complainant: data.complainant ?? { name: '' },
         offense: data.offense ?? { sections: [] },
         accused: data.accused ?? {},
-        witnesses: [],
+        witnesses: data.witnesses ?? [],
         narrative: data.narrative ?? '',
-        missingFields: [],
+        missingFields: data.missingFields ?? [],
       }
       incidents.unshift(incident)
       return incident

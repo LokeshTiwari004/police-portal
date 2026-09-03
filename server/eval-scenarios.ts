@@ -67,14 +67,15 @@ async function main() {
   const names = tools.map((t) => t.name)
   const allTools = [
     'fir.identify_required_fields', 'fir.fill_field', 'fir.flag_missing',
-    'fir.validate_form', 'fir.submit', 'fir.find_similar_cases',
+    'fir.validate_form', 'fir.submit', 'fir.find_similar_cases', 'fir.create', 'fir.link_erss',
     'challan.lookup_rc', 'challan.auto_calculate_fine', 'challan.submit',
-    'dispatch.classify_nature', 'dispatch.get_available_units', 'dispatch.assign_unit',
+    'dispatch.classify_nature', 'dispatch.get_available_units', 'dispatch.assign_unit', 'erss.create_call',
+    'record.list', 'record.select',
     'nav.switch_tab',
   ]
   rows.push({
-    metric: 'Tool discovery (6/3/3/1)',
-    target: '13 tools listed',
+    metric: 'Tool discovery (8/3/4/2/1)',
+    target: '18 tools listed',
     actual: `${names.length} tools`,
     pass: allTools.every((n) => names.includes(n)),
   })
@@ -181,6 +182,32 @@ async function main() {
     target: 'low (in-process)',
     actual: `${avgMs.toFixed(1)}ms`,
     pass: avgMs < 100,
+  })
+
+  // 8. Record graph: create ERSS -> list -> link FIR back to ERSS
+  const erss = await parsed('erss.create_call', { description: 'hit and run on MG Road, pedestrian injured' })
+  const listed = await parsed('record.list', { module: 'dispatch' })
+  const erssRec = listed.records.find((r: { id: string }) => r.id === erss.id)
+  const link = await parsed('fir.link_erss', { erssId: erss.id, recordId: submit.id })
+  const relist = await parsed('record.list', {})
+  const linkedBearer = relist.records.find((r: { id: string }) => r.id === submit.id)
+  rows.push({
+    metric: 'ERSS -> FIR linking (created + discoverable + linked)',
+    target: 'erss record exists, link ok, linkedErssNumber === erssNumber',
+    actual: `erssId=${!!erss.id}, erssNumber=${erss.erssNumber}, listed=${!!erssRec}, link=${link.ok}, linked=${link.linkedErssNumber === erss.erssNumber}, firListed=${!!linkedBearer}`,
+    pass:
+      !!erss.id && !!erssRec && link.ok === true &&
+      link.linkedErssNumber === erss.erssNumber && !!linkedBearer,
+  })
+
+  // 9. record.select drives later tool calls on a targeted record
+  const sel = await parsed('record.select', { recordId: erss.id })
+  const assignErss = await parsed('dispatch.assign_unit', { unitId: 'PCR-88' })
+  rows.push({
+    metric: 'record.select targets the selected record',
+    target: 'select ok; dispatch.assign_unit now hits the ERSS call',
+    actual: `select=${sel.ok}, selected=${sel.selected?.id === erss.id}, assignedErss=${assignErss.recordId === erss.id}`,
+    pass: sel.ok === true && sel.selected?.id === erss.id && assignErss.recordId === erss.id,
   })
 
   await close()
