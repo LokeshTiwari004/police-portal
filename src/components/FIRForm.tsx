@@ -23,6 +23,7 @@ function setValue(inc: Incident, path: string, value: unknown): Incident {
 
 export default function FIRForm() {
   const [incident, setIncident] = useState<Incident>(() => incidentStore.list()[0] ?? incidentStore.create())
+  const [submitted, setSubmitted] = useState(false)
 
   // Sync with the live active incident. WebMCP tools (fir.fill_field,
   // fir.flag_missing, ...) mutate incidentStore directly; subscribing here
@@ -240,6 +241,31 @@ export default function FIRForm() {
           </div>
         </fieldset>
       ))}
+
+      <div className="flex items-center gap-3 pt-2">
+        <button
+          type="button"
+          disabled={submitted || incident.status === 'acknowledged'}
+          onClick={() => {
+            const { valid } = validateIncident(incident, sections)
+            if (!valid) return
+            incidentStore.update(incident.id, { status: 'acknowledged' })
+            setSubmitted(true)
+          }}
+          className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition ${
+            submitted || incident.status === 'acknowledged'
+              ? 'bg-emerald-100 text-emerald-700 cursor-default'
+              : 'bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800'
+          }`}
+        >
+          {submitted || incident.status === 'acknowledged' ? 'FIR Submitted' : 'Submit FIR'}
+        </button>
+        {(submitted || incident.status === 'acknowledged') && (
+          <span className="text-sm text-emerald-700">
+            {incident.firNumber} — acknowledged
+          </span>
+        )}
+      </div>
     </form>
   )
 }
