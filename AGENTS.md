@@ -11,6 +11,7 @@ WebMCP-enabled "Digital Police Portal": React 19 + Vite + TS + Tailwind v4 + Zus
 - `npm run test:coverage` — run with v8 coverage report
 - `npm run mcp` — run the external-agent MCP bridge (`tsx server/mcp-server.ts`, stdio)
 - `npm run eval` — run the MCP eval harness (`tsx server/eval-scenarios.ts`): drives a real MCP Client against `createPortalServer` over the in-memory transport, runs the hackathon eval scenarios, and rewrites `docs/EVAL_RESULTS.md` (currently 11/11 PASS).
+- `npm run tools:verify` — run the per-tool flow harness (`tsx server/verify-tools.ts`): drives the real `createPortalServer` over the in-memory transport and exercises all 18 tools' intended flows (25 checks, 0 expected). Run when tool behavior, a tool signature, or a new tool is added.
 - Run ONE test file: `npx vitest run src/lib/validation.test.ts`
 - Run tests matching a name: `npx vitest run -t "fill_field"`
 
