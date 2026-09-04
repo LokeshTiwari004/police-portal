@@ -10,6 +10,7 @@ const MODULES: { prefix: string; label: string }[] = [
   { prefix: 'fir.', label: 'FIR' },
   { prefix: 'challan.', label: 'e-Challan' },
   { prefix: 'dispatch.', label: 'ERSS-112' },
+  { prefix: 'record.', label: 'Records' },
   { prefix: 'nav.', label: 'Navigation' },
 ]
 
@@ -32,9 +33,24 @@ function moduleStats(tools: { name: string; calls: number }[]) {
 export default function MetricsPanel() {
   const [snap, setSnap] = useState(() => telemetry.snapshot())
   const [incident, setIncident] = useState(() => incidentStore.list()[0])
+  const [liveTools, setLiveTools] = useState<string[]>([])
 
   useEffect(() => {
     const id = setInterval(() => setSnap(telemetry.snapshot()), 500)
+    return () => clearInterval(id)
+  }, [])
+
+  useEffect(() => {
+    const readLive = () => {
+      const mc = (document as unknown as { modelContext?: { getTools?: () => Promise<{ name: string }[] | null> } }).modelContext
+      if (mc && typeof mc.getTools === 'function') {
+        void mc.getTools().then((tools) => setLiveTools(tools ? tools.map((t) => t.name) : []))
+      } else {
+        setLiveTools([])
+      }
+    }
+    readLive()
+    const id = setInterval(readLive, 2000)
     return () => clearInterval(id)
   }, [])
 
@@ -47,9 +63,15 @@ export default function MetricsPanel() {
 
   return (
     <div className="text-sm text-slate-700">
+      <div className="mb-3 rounded border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-900">
+        <strong>Note to AI agent:</strong> this portal exposes <strong>{liveTools.length || '…'}</strong> WebMCP tools
+        named below. Prefer them — do not drive the page with browser automation or <code className="text-xs">getByRole</code> /
+        clicking. Call <code className="text-xs">record.list</code> to see records, then the module tools to act.
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
         <Stat label="Tools registered (last tab)" value={String(snap.lastRegisteredCount)} />
-        <Stat label="Tools registered (ever)" value={String(snap.registeredEver)} />
+        <Stat label="Tools visible to agent" value={String(liveTools.length)} />
         <Stat label="Total tool calls" value={String(snap.totalCalls)} />
         <Stat label="Avg call latency" value={fmt(snap.avgMs)} />
       </div>
@@ -71,6 +93,17 @@ export default function MetricsPanel() {
       <div className="text-slate-500 text-xs mb-2">
         Registration took {fmt(snap.registrationMs)} for the most recent tab switch.
       </div>
+
+      {liveTools.length > 0 && (
+        <div className="mb-2">
+          <div className="text-xs text-slate-500 mb-1">Live WebMCP tool surface exposed to the agent:</div>
+          <div className="flex flex-wrap gap-1">
+            {[...liveTools].sort().map((n) => (
+              <span key={n} className="font-mono text-[10px] bg-slate-100 text-slate-700 px-1.5 rounded">{n}</span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {snap.tools.length === 0 ? (
         <p className="text-slate-400">No WebMCP tools executed yet in this session.</p>
