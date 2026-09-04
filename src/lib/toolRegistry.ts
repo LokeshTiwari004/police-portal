@@ -138,8 +138,10 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.identify_required_fields',
       title: 'Identify required FIR fields',
       description:
-        'Return which FIR form fields are required now and which become required ' +
-        'when a given IPC section is answered. Read this before filling the form.',
+        'FIR helper. You call me to know which FIR fields are required now and which ' +
+        'become required once a given IPC section is set (e.g. theft switches "property" ' +
+        'to required). Do NOT try to read the form on screen for this — I compute it ' +
+        'authoritatively. Read me first, then populate via fir.fill_field.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -168,8 +170,10 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.fill_field',
       title: 'Fill a FIR form field',
       description:
-        'Fill one FIR field by dotted path and value. Returns revealed fields newly ' +
-        'required by this value. The running form updates live.',
+        'FIR action. I write one FIR field by dotted path and value into the record and the ' +
+        'live form updates. This is how you file paperwork — do NOT click/type into the ' +
+        'browser. Call me repeatedly (complainant.name, offense.sections, accused.*, narrative, ' +
+        'and conditional property/witnesses) until fir.validate_form passes.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -217,7 +221,8 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.flag_missing',
       title: 'Flag fields for human review',
       description:
-        'Mark FIR fields as needing an officer to review before submission.',
+        'FIR action. I mark FIR fields as needing an officer to review before submission ' +
+        '(e.g. ambiguous identity). Call me instead of guessing a value you cannot confirm.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -246,8 +251,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.validate_form',
       title: 'Validate the FIR form',
       description:
-        "Validate the whole FIR form. Returns { valid, errors } with field -> message. " +
-        "Matches what the on-screen form shows.",
+        'FIR action. I run the same validation the officer\'s form uses and return ' +
+        '{ valid, errors } with field->message. Call me before fir.submit to confirm the FIR ' +
+        'is complete — this is the source of truth, not reading the page.',
       inputSchema: { type: 'object', properties: { recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' } } },
       execute: async ({ recordId }) => {
         const incident = resolveTarget(store, recordId) || store.create()
@@ -260,8 +266,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.submit',
       title: 'Submit the FIR',
       description:
-        'Submit the completed FIR after it passes full-form validation. Rejects with ' +
-        'errors if any required field is missing/invalid. Returns the persisted record id, firNumber and status.',
+        'FIR action. I submit the completed FIR after full-form validation passes and return ' +
+        'the persisted id, firNumber and status. Call me to file the record — never press a ' +
+        'button in the browser. I reject with errors if anything is missing; fix via fir.fill_field.',
       inputSchema: { type: 'object', properties: { recordId: { type: 'string', description: 'Incident id to target; defaults to the selected/most recent record.' } } },
       execute: async ({ recordId }) => {
         const incident = resolveTarget(store, recordId)
@@ -284,8 +291,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.find_similar_cases',
       title: 'Find similar past FIRs',
       description:
-        'Search the case archive for prior FIRs matching the given IPC sections ' +
-        '(optional location filter). Useful for precedent and repeat offenders.',
+        'FIR research helper. I search the case archive for prior FIRs matching given IPC ' +
+        'sections (optional location filter) and return precedents for repeat offenders. ' +
+        'Read-only; call me for background, not to change records.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -317,8 +325,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.create',
       title: 'Create a new FIR record',
       description:
-        'Create a fresh, blank FIR record and make it the selected record. ' +
-        'Optionally pre-seed the complainant name and offense sections. Returns the new record id and firNumber.',
+        'FIR action. I create a fresh blank FIR and select it so later calls act on it. ' +
+        'Optionally pre-seed complainantName / sections / narrative. Call me to start a case ' +
+        'instead of clicking the UI.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -346,8 +355,9 @@ export function getFirTools(store: Store<Incident>): ToolDefinition[] {
       name: 'fir.link_erss',
       title: 'Link an FIR to an originating ERSS-112 call',
       description:
-        'Record that an FIR/escalated record was created from an ERSS-112 call so the officer ' +
-        'can see the source. Pass the ERSS record id (or the message id). Sets sourceErss on the FIR.',
+        'FIR action. I link an FIR back to the ERSS-112 call that led to it, so the officer ' +
+        'sees the source (an "Escalated from ERSS-112" marker appears). Pass the ERSS record id. ' +
+        'Call me after you escalate a call — do not edit the UI.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -388,8 +398,9 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
       name: 'challan.lookup_rc',
       title: 'Look up vehicle by RC',
       description:
-        'Look up a vehicle by registration number. Returns owner, address, vehicle ' +
-        'class, engine capacity and fuel type from the transport database.',
+        'Challan helper. I look up a vehicle by its registration number in the transport ' +
+        'database and return owner, address, vehicle class and fuel type. Call me to identify a ' +
+        'vehicle — do not search the page.',
       inputSchema: {
         type: 'object',
         properties: { rcNumber: { type: 'string', description: 'Vehicle registration number, e.g. UP14C1234.' } },
@@ -407,8 +418,8 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
       name: 'challan.auto_calculate_fine',
       title: 'Calculate traffic fine',
       description:
-        'Compute the traffic fine for an offence and vehicle class from the Motor ' +
-        'Vehicles Act matrix. Returns the amount in rupees.',
+        'Challan helper. I compute the traffic fine for an MVA offence + vehicle class from the ' +
+        'statutory matrix and return the amount in rupees. Call me to price a challan before challan.submit.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -429,9 +440,9 @@ export function getChallanTools(store: Store<Incident>): ToolDefinition[] {
       name: 'challan.submit',
       title: 'Submit traffic challan',
       description:
-        'Persist a traffic challan onto the active FIR incident and return its firNumber. ' +
-        'Pass the rcNumber, offenseCode and fineAmount (from challan.lookup_rc / challan.auto_calculate_fine) ' +
-        'so the challan is cross-linked to the incident.',
+        'Challan action. I persist a traffic challan onto the active record and cross-link it to ' +
+        'the FIR. Pass rcNumber, offenseCode and fineAmount (from challan.lookup_rc / ' +
+        'challan.auto_calculate_fine). Call me to issue the challan — do not fill the form in the browser.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -465,8 +476,8 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
       name: 'dispatch.classify_nature',
       title: 'Classify emergency nature code',
       description:
-        'Map a natural-language emergency into an official ERSS-112 nature code ' +
-        '("heart attack" -> MED-001, "fire" -> FIR-003).',
+        'ERSS helper. I map a natural-language emergency into an official ERSS-112 nature code ' +
+        '("heart attack" -> MED-001, "fire" -> FIR-003). Call me to classify a call.',
       inputSchema: {
         type: 'object',
         properties: { description: { type: 'string', description: 'Free-text emergency description.' } },
@@ -486,7 +497,7 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
     {
       name: 'dispatch.get_available_units',
       title: 'List available response units',
-      description: 'Return available response units (ambulance, patrol, fire) and ETA.',
+      description: 'ERSS action. I return the units you can dispatch (ambulance, patrol, fire) with ETA. Call me before dispatch.assign_unit to pick a unit id.',
       inputSchema: {
         type: 'object',
         properties: { type: { type: 'string', description: 'Optional unit type filter (e.g. Ambulance).' } },
@@ -505,9 +516,9 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
       name: 'erss.create_call',
       title: 'Create an ERSS-112 call',
       description:
-        'Create a standalone ERSS-112 emergency call from a free-text description. ' +
-        'Classifies the nature, sets priority (immediate for medical) and makes it the selected record. ' +
-        'Returns the record id, erssNumber and the classified nature.',
+        'ERSS action. I create a standalone ERSS-112 emergency call from free text: classify the ' +
+        'nature, set priority and select the record. Returns id, erssNumber and nature. Call me to ' +
+        'log an incoming 112 call — do not open/locate the Emergency Call Log in the browser.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -553,7 +564,8 @@ export function getDispatchTools(store: Store<Incident>): ToolDefinition[] {
       name: 'dispatch.assign_unit',
       title: 'Assign response unit to incident',
       description:
-        'Assign a response unit to an incident. Sets the incident status to dispatched.',
+        'ERSS action. I assign a response unit to an incident and set its status to dispatched. ' +
+        'Pass unitId from dispatch.get_available_units. Call me to dispatch — never manipulate the dispatch UI.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -586,8 +598,9 @@ export function getRecordTools(store: Store<Incident>): ToolDefinition[] {
       name: 'record.list',
       title: 'List incidents/records',
       description:
-        'List portal records (FIR / e-Challan / ERSS-112) with optional filters. ' +
-        'Returns id, firNumber, status and which modules each record spans. Use this to discover a record id before acting on it.',
+        'Record helper — call me FIRST. I return the portal\'s records (FIR / e-Challan / ERSS-112) ' +
+        'with optional module/status/text filters and each record\'s id. Always call me to discover a ' +
+        'record id before acting, instead of reading the on-screen list.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -644,8 +657,9 @@ export function getRecordTools(store: Store<Incident>): ToolDefinition[] {
       name: 'record.select',
       title: 'Select the active record',
       description:
-        'Set the "selected record" that later tool calls (fir.fill_field, challan.submit, dispatch.*) ' +
-        'act on by default when no recordId is passed.',
+        'Record action. I set which record later calls (fir.*, challan.submit, dispatch.*) act on by ' +
+        'default. Pass recordId from record.list. Call me to focus work on one record instead of interacting ' +
+        'with the list UI.',
       inputSchema: {
         type: 'object',
         properties: { recordId: { type: 'string', description: 'The incident id to select (from record.list).' } },
@@ -668,9 +682,8 @@ export function getNavTools(): ToolDefinition[] {
       name: 'nav.switch_tab',
       title: 'Switch portal tab',
       description:
-        'Switch the portal to a different module tab (fir, challan, dispatch, metrics) ' +
-        'so the agent and officer are viewing the same screen. In the browser this ' +
-        'updates the live UI; over MCP it is a no-op that reports the requested tab.',
+        'Navigation action. I switch the portal to a module tab (fir, challan, dispatch, metrics) so the ' +
+        'agent and officer share the same screen. Call me to move views — do not click the nav bar.',
       inputSchema: {
         type: 'object',
         properties: {

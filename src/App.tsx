@@ -80,6 +80,12 @@ export default function App() {
             <div className={toolsRegistered > 0 ? 'text-emerald-400' : 'text-amber-400'}>
               {toolsRegistered > 0 ? `${toolsRegistered} WebMCP tools live` : 'WebMCP tools pending (enable chrome://flags/#enable-webmcp-testing)'}
             </div>
+            {toolsRegistered > 0 && (
+              <div className="text-emerald-600/50 text-[11px] max-w-[260px] text-left mt-1">
+                Agent: use the WebMCP tools (record.list → module tools). Do NOT drive/click the page —
+                I react to your tool calls.
+              </div>
+            )}
           </div>
         </div>
         <nav className="max-w-5xl mx-auto mt-4 flex gap-2">
